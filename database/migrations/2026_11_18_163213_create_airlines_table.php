@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('airlines', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name', 150);
+            $table->string('code', 3)->unique();
+            $table->string('logo', 255)->nullable();
+            $table->string('country', 100);
+            $table->enum('status', ['pending', 'active', 'suspended']);
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('airlines');
+    }
+};
