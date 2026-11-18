@@ -1,25 +1,39 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
-Route::view('/', 'travel.home', ['title' => 'Find your flight'])->name('home');
-Route::view('/flights', 'travel.results', ['title' => 'Search Results'])->name('flights.search');
-Route::view('/flights/{flight}', 'travel.flight', ['title' => 'Flight Details'])->whereNumber('flight')->name('flights.show');
-Route::view('/compare', 'travel.compare', ['title' => 'Compare'])->name('compare');
-Route::view('/destinations/{country?}', 'travel.destinations', ['title' => 'Destination Guide'])->name('destinations');
-Route::view('/booking-lookup', 'travel.lookup', ['title' => 'Booking Lookup'])->name('booking.lookup');
-Route::view('/assistant', 'travel.assistant', ['title' => 'AI Assistant'])->name('assistant');
+Route::get('/', function (Request $request) {
+    $locale = $request->session()->get('landing_locale');
+    if ($locale !== null) {
+        app()->setLocale($locale);
+    }
 
-Route::view('/login', 'travel.login', ['title' => 'Login'])->name('login');
-Route::view('/register', 'travel.register', ['title' => 'Register'])->name('register');
+    return view('welcome');
+})->name('home');
+
+Route::post('/language/{locale}', function (Request $request, string $locale) {
+    $request->session()->put('landing_locale', $locale);
+
+    return redirect()->route('home');
+})->whereIn('locale', ['en', 'ar'])->name('home.language');
+Route::view('/flights', 'flights.index', ['title' => 'Search Results'])->name('flights.search');
+Route::view('/flights/{flight}', 'flights.show', ['title' => 'Flight Details'])->whereNumber('flight')->name('flights.show');
+Route::view('/compare', 'flights.compare', ['title' => 'Compare'])->name('compare');
+Route::view('/destinations/{country?}', 'pages.destinations', ['title' => 'Destination Guide'])->name('destinations');
+Route::view('/booking-lookup', 'booking.lookup', ['title' => 'Booking Lookup'])->name('booking.lookup');
+Route::view('/assistant', 'pages.assistant', ['title' => 'AI Assistant'])->name('assistant');
+
+Route::view('/login', 'auth.login', ['title' => 'Login'])->name('login');
+Route::view('/register', 'auth.register', ['title' => 'Register'])->name('register');
 
 foreach (['about' => 'About Us', 'faq' => 'FAQ', 'terms' => 'Terms and Conditions', 'privacy' => 'Privacy Policy', 'contact' => 'Contact and Suggestions'] as $page => $title) {
-    Route::view("/$page", 'travel.public', compact('page', 'title'))->name($page);
+    Route::view("/$page", 'pages.information', compact('page', 'title'))->name($page);
 }
 
 $steps = ['passengers' => 'Passengers', 'seats' => 'Seat Selection', 'review' => 'Review', 'payment' => 'Payment', 'confirmation' => 'Confirmation'];
 foreach ($steps as $step => $title) {
-    Route::view("/book/$step", 'travel.checkout', compact('step', 'steps', 'title'))->name("book.$step");
+    Route::view("/book/$step", 'booking.checkout', compact('step', 'steps', 'title'))->name("book.$step");
 }
 
 Route::prefix('my')->name('my.')->group(function () {
@@ -30,7 +44,7 @@ Route::prefix('my')->name('my.')->group(function () {
         'credits' => ['/credits', 'Credits Wallet'],
         'profile' => ['/profile', 'Profile'],
     ] as $screen => [$path, $title]) {
-        Route::view($path, 'travel.account', compact('screen', 'title'))->name($screen);
+        Route::view($path, 'customer.account', compact('screen', 'title'))->name($screen);
     }
 });
 
@@ -66,12 +80,18 @@ $staff = [
 ];
 
 foreach ($staff as $area => $navigation) {
+    $folder = $area === 'admin' ? 'super-admin' : 'airline-admin';
     $staffTitle = $area === 'admin' ? 'Admin Login' : 'Airline Admin Login';
-    Route::view("/$area/login", 'travel.login', ['title' => $staffTitle])->name("$area.login");
-    foreach ($navigation as $screen => $definition) {
-        [$path, $title] = $definition;
-        $columns = $definition[2] ?? [];
-        Route::view("/$area".$path, 'travel.staff', compact('area', 'screen', 'title', 'columns', 'navigation'))
-            ->whereNumber('id')->name("$area.$screen");
-    }
+
+    Route::prefix($area)->name("$area.")->group(function () use ($area, $folder, $navigation, $staffTitle) {
+        Route::view('/login', "$folder.login", ['title' => $staffTitle])->name('login');
+
+        foreach ($navigation as $screen => $definition) {
+            [$path, $title] = $definition;
+            $columns = $definition[2] ?? [];
+
+            Route::view($path, "$folder.panel", compact('area', 'screen', 'title', 'columns', 'navigation'))
+                ->whereNumber('id')->name($screen);
+        }
+    });
 }
