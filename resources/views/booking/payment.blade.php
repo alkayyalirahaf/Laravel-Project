@@ -7,7 +7,7 @@
 
 @if($booking === null)
     <section class="panel narrow">
-        <p class="notice" role="alert">We couldn’t find that booking. Check the booking link or return to <a href="{{ route('my.bookings') }}">My bookings</a>.</p>
+        <p class="notice" role="alert">We couldn’t find that booking. Check the booking link or return to <a class="button secondary" href="{{ route('my.bookings') }}">My bookings</a>.</p>
     </section>
 @else
 <section class="panel narrow">

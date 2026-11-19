@@ -61,6 +61,59 @@ class AuthFlowTest extends TestCase
         $this->get('/airline/login')->assertOk()->assertSee('action="'.route('airline.login.submit').'"', false)->assertSee('name="_token"', false);
     }
 
+    public function test_customer_login_renders_general_and_field_level_credential_errors(): void
+    {
+        $this->from(route('login'))
+            ->post(route('login.store'), [
+                'email' => 'unknown@example.test',
+                'password' => 'incorrect-password',
+            ])
+            ->assertRedirect(route('login'));
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Check the highlighted fields and try again.')
+            ->assertSee('These credentials do not match our records.');
+    }
+
+    public function test_customer_login_shows_the_generic_error_for_another_role(): void
+    {
+        $superAdmin = $this->makeRoleUser('super_admin', 'wrong-role@example.test');
+
+        $this->from(route('login'))
+            ->post(route('login.store'), [
+                'email' => $superAdmin->email,
+                'password' => 'CorrectPassword123!',
+            ])
+            ->assertRedirect(route('login'));
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('These credentials do not match our records.');
+        $this->assertGuest();
+    }
+
+    public function test_register_renders_field_errors_old_values_and_never_old_passwords(): void
+    {
+        $payload = $this->validRegistration('register.error@example.test');
+        $payload['name'] = '';
+        $payload['password'] = 'weak-password';
+        $payload['password_confirmation'] = 'different-password';
+
+        $this->from(route('register'))
+            ->post(route('register.store'), $payload)
+            ->assertRedirect(route('register'))
+            ->assertSessionHasErrors(['name', 'password']);
+
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertSee('Check the highlighted fields and try again.')
+            ->assertSee('The name field is required.')
+            ->assertSee('value="register.error@example.test"', false)
+            ->assertDontSee('weak-password')
+            ->assertDontSee('different-password');
+    }
+
     public function test_admin_login_routes_remain_owned_by_admin_auth_controller(): void
     {
         $routes = Route::getRoutes();

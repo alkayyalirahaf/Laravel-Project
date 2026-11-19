@@ -26,7 +26,28 @@
             <article class="panel"><h2>Flight information</h2><p>Airline schedules and fares can change. Confirm your itinerary, baggage allowances, and fare conditions before traveling.</p><h2>Booking support</h2><p>Use the contact form if you need help with an existing reservation.</p><p>Full platform terms are pending publication.</p></article>
             @break
         @case('privacy')
-            <article class="panel"><h2>Account and support information</h2><p>Account details support sign-in and booking access. Contact form submissions are stored for staff to respond to your request.</p><h2>Passport data and AI</h2><p>Passport scanning and AI chat are currently unavailable. Keep passport numbers and payment details out of support messages.</p></article>
+            <article class="panel stack">
+                <section>
+                    <h2>Bookings</h2>
+                    <p>We collect the passport and identity details you provide when they are needed to arrange a booking.</p>
+                </section>
+                <section>
+                    <h2>Payments</h2>
+                    <p>Card details are entered on Stripe Checkout. We never store your card details.</p>
+                </section>
+                <section>
+                    <h2>Contact messages</h2>
+                    <p>Messages sent through our contact form are saved so our team can respond.</p>
+                </section>
+                <section>
+                    <h2>Search and AI</h2>
+                    <p>AI features may process text you enter while searching or chatting. Passport photos are never stored.</p>
+                </section>
+                <section>
+                    <h2>Account credits</h2>
+                    <p>Your account credits and balance changes are kept in a transaction ledger.</p>
+                </section>
+            </article>
             @break
         @case('contact')
             <form action="{{ route('contact.store') }}" method="POST" class="panel stack">
