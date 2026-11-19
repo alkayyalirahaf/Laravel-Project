@@ -2,19 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use App\Http\Controllers\AdminAuthController;
 
 Route::get('/', function (Request $request) {
     $locale = $request->session()->get('landing_locale');
-    if ($locale !== null) {
-        app()->setLocale($locale);
-    }
-
+    if ($locale !== null) app()->setLocale($locale);
     return view('welcome');
 })->name('home');
 
 Route::post('/language/{locale}', function (Request $request, string $locale) {
     $request->session()->put('landing_locale', $locale);
-
     return redirect()->route('home');
 })->whereIn('locale', ['en', 'ar'])->name('home.language');
 Route::view('/flights', 'flights.index', ['title' => 'Search Results'])->name('flights.search');
@@ -32,9 +29,7 @@ foreach (['about' => 'About Us', 'faq' => 'FAQ', 'terms' => 'Terms and Condition
 }
 
 $steps = ['passengers' => 'Passengers', 'seats' => 'Seat Selection', 'review' => 'Review', 'payment' => 'Payment', 'confirmation' => 'Confirmation'];
-foreach ($steps as $step => $title) {
-    Route::view("/book/$step", 'booking.checkout', compact('step', 'steps', 'title'))->name("book.$step");
-}
+foreach ($steps as $step => $title) Route::view("/book/$step", 'booking.checkout', compact('step', 'steps', 'title'))->name("book.$step");
 
 Route::prefix('my')->name('my.')->group(function () {
     foreach ([
@@ -82,16 +77,17 @@ $staff = [
 foreach ($staff as $area => $navigation) {
     $folder = $area === 'admin' ? 'super-admin' : 'airline-admin';
     $staffTitle = $area === 'admin' ? 'Admin Login' : 'Airline Admin Login';
-
     Route::prefix($area)->name("$area.")->group(function () use ($area, $folder, $navigation, $staffTitle) {
-        Route::view('/login', "$folder.login", ['title' => $staffTitle])->name('login');
-
+        if ($area === 'admin') {
+            Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
+            Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+        } else {
+            Route::view('/login', "$folder.login", ['title' => $staffTitle])->name('login');
+        }
         foreach ($navigation as $screen => $definition) {
             [$path, $title] = $definition;
             $columns = $definition[2] ?? [];
-
-            Route::view($path, "$folder.panel", compact('area', 'screen', 'title', 'columns', 'navigation'))
-                ->whereNumber('id')->name($screen);
+            Route::view($path, "$folder.panel", compact('area', 'screen', 'title', 'columns', 'navigation'))->whereNumber('id')->name($screen);
         }
     });
 }
