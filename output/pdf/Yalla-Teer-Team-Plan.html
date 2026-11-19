@@ -1,0 +1,396 @@
+<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><style>
+ @page { size:A4; margin:18mm 16mm 20mm; }
+ * {box-sizing:border-box} body{font-family:Tahoma,Arial,sans-serif;color:#17212c;font-size:9.8pt;line-height:1.65;margin:0}
+ h1,h2,h3 {line-height:1.5;break-after:avoid} h2{font-size:17pt;border-bottom:2px solid #b99545;padding-bottom:7px;color:#152332;margin:22px 0 12px} h3{font-size:12pt;color:#795c20;margin:17px 0 7px}
+ p{margin:7px 0} ul,ol{padding-right:23px;margin:8px 0} li{margin:4px 0} table{border-collapse:collapse;width:100%;font-size:9pt;margin:13px 0;line-height:1.65} th{background:#152332;color:white;text-align:right} td,th{border:1px solid #d5dce1;padding:7px 8px;vertical-align:top} tr{break-inside:avoid} thead{display:table-header-group} tbody tr:nth-child(even){background:#f5f7f9}
+ code{font-family:Consolas,monospace;font-size:9pt;direction:ltr;unicode-bidi:isolate;overflow-wrap:anywhere} pre{direction:ltr;text-align:left;background:#f1f4f6;border-right:3px solid #b99545;padding:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;font-size:9pt} pre code{font-size:9pt}
+ .cover{height:245mm;display:flex;flex-direction:column;justify-content:center;break-after:page;border-top:7px solid #b99545} .brand{font: bold 18pt Arial;letter-spacing:3px;color:#997627;direction:ltr;text-align:right}.cover h1{font-size:34pt;color:#152332;margin:22px 0 13px}.cover p{font-size:15pt;color:#59636c}.cover .meta{margin-top:28px;font-size:11pt}.cover .pill{border-right:4px solid #b99545;padding:12px 18px;background:#f5f4ef;font-size:12pt;line-height:2}
+ h2.dev{break-before:page} 
+ </style><body><section class="cover"><div class="brand">YALLA TEER</div><h1>خطة تنفيذ الفريق</h1><p>من الواجهات التجريبية إلى مشروع يعمل فعليًا</p><div class="pill">٥ ديفيلوبرز · ٥١ بندًا في الجرد المعتمد<br>الكونترولرز · الصلاحيات · الخدمات · تسليمات الفريق</div><div class="meta">إعداد حسب المشروع الحالي والوثيقة المعتمدة<br>١٩ نوفمبر ٢٠٢٦</div></section><p>تاريخ المراجعة: 19 نوفمبر 2026.</p>
+<p>المرجع: الوثيقة المعتمدة لتوزيع فريق Yalla Teer، الصفحات 1–7.</p>
+<p>هذه خطة تنفيذ مقترحة وليست كودًا منفذًا. توزيع الشاشات مأخوذ من الملف المعتمد؛ توزيع خدمات الباك إند وأسماء الكونترولرز والمراحل أدناه اقتراح مبني على الكود الحالي. لا نفترض أن تعليمات الوثيقة أو المواعيد المذكورة فيها تنفّذ نفسها.</p>
+<h2>1. نقطة البداية الفعلية</h2>
+<ul>
+<li>المشروع Laravel 12 مع Blade وVite، وليس مشروع API وSPA منفصلًا. نبدأ بروتات Web وForm Requests وViews، ولا نضيف طبقة API كاملة بلا حاجة.</li>
+<li>يوجد 21 Controller خاصًا بالمجال، وجميعها حاليًا فارغة من الدوال. وجود الملف لا يعني تنفيذ الميزة.</li>
+<li>توجد Models وعلاقات وجداول للمستخدمين والأدوار والشركات والمطارات والرحلات والحجوزات والدفع والرصيد وغيرها. نعيد استخدامها ونراجع قيودها بدل إعادة إنشاء المشروع.</li>
+<li><code>routes/web.php</code> يعرض الصفحات غالبًا عبر <code>Route::view</code>. لا يوجد ربط فعلي لهذه الشاشات بالكونترولرز أو حماية مجموعات الأدوار في هذا الملف.</li>
+<li>تسجيل الدخول والتسجيل وعدة نماذج حساب العميل Preview. <code>resources/js/preview-forms.js</code> يمنع الإرسال ويعرض رسالة أن البيانات لم تحفظ.</li>
+<li>نتائج الرحلات وخطوات الحجز تستخدم بيانات تجريبية من <code>resources/views/shared/demo-flights.php</code>.</li>
+<li><code>User</code> مرتبط بـ <code>Customer</code> و<code>AirlineAdmin</code> و<code>SuperAdmin</code>؛ لا حاجة لثلاثة أنظمة مستخدمين مستقلة.</li>
+<li>لا يوجد تنفيذ مخصص للأدوار في <code>bootstrap/app.php</code>، والـ Seeder الحالي ينشئ مستخدم اختبار فقط.</li>
+<li>جدول العملاء لا يحتوي حالة حظر. هذه إضافة لازمة لتنفيذ A4.</li>
+<li>حزمة Stripe غير موجودة في <code>composer.json</code> الحالي؛ الدفع يحتاج إعدادًا وتكاملًا فعليين.</li>
+<li>مسار التأكيد الحالي <code>/book/confirmation</code> يختلف عن المعتمد <code>/bookings/{code}/confirmation</code>.</li>
+</ul>
+<p>النتيجة: نطوّر الموجود من معاينة إلى وظائف فعلية، ولا نعيد كتابة التصميم من الصفر ولا نعتبر الشاشات المنفذة بصريًا ميزات مكتملة.</p>
+<h2>2. ما يحافظ عليه الفريق من الملف المعتمد</h2>
+<table>
+<thead>
+<tr>
+<th>المطور</th>
+<th align="right">الشاشات/بنود الجرد حسب المعتمد</th>
+<th align="right">CRUD حسب المعتمد</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dev 1</td>
+<td align="right">10</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>Dev 2</td>
+<td align="right">10</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>Dev 3</td>
+<td align="right">10</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>Dev 4</td>
+<td align="right">10</td>
+<td align="right">3</td>
+</tr>
+<tr>
+<td>Dev 5</td>
+<td align="right">11</td>
+<td align="right">3</td>
+</tr>
+</tbody></table>
+<p>المجموع 51 بندًا حسب عدّ الوثيقة. بعض البنود تجمع مسارين مثل الإنشاء والتعديل، لذلك هذا ليس عدد URLs الحرفي. عدد CRUD لا يقيس صعوبة الدفع أو الحجز أو AI؛ توزيع الباك إند يحتاج مراجعة قدرة الفريق.</p>
+<h2>3. اتفاق الفريق قبل التنفيذ</h2>
+<ol>
+<li>تثبيت اسم Yalla Teer في الواجهة؛ عدم إعادة تسمية جداول أو قاعدة بيانات فقط لأسباب شكلية.</li>
+<li>الحفاظ على أسماء الروتات الحالية قدر الإمكان لتجنب كسر روابط Blade. أي اسم جديد يوثّق قبل الدمج.</li>
+<li>فصل الروتات إلى ملفات مقترحة: <code>public.php</code>, <code>customer.php</code>, <code>super-admin.php</code>, <code>airline-admin.php</code>, <code>auth.php</code> يستدعيها <code>web.php</code>. لا نسجل GET للمسار نفسه مرتين.</li>
+<li>استخدام <code>User</code> للدخول ووجود علاقة الدور لتحديده. Dev 5 يضع قاعدة تمنع الحساب من جمع أدوار متعارضة. إضافة عمود role ليست إلزامية لهذا التصميم.</li>
+<li>تحديد سياسة العملات والمنطقة الزمنية والتقريب والضرائب والرسوم والإلغاء وتغيير الحجز قبل تسعير حقيقي؛ الملف لا يحدد قيمها.</li>
+<li>تحديد دخول الضيف: البحث عام، والحجز والحساب يتطلبان عميلًا في الخطة المقترحة. Lookup عام ومحدود البيانات مع حماية من المحاولات المتكررة.</li>
+<li>تعديل Schema بمigrations جديدة عند وجود قواعد بيانات مستخدمة. لا يتخذ أحد <code>migrate:fresh</code> كخطوة دمج اعتيادية.</li>
+<li>تثبيت عقود البيانات بعينات مكتوبة. كل شخص يقدر يطوّر ببيانات Mock، لكن لا يعلن اكتمال الربط قبل اختبار قاعدة البيانات.</li>
+</ol>
+<h2>4. تنظيم الكونترولرز المقترح</h2>
+<p>داخل <code>app/Http/Controllers</code>:</p>
+<pre><code class="language-text">Auth/
+  CustomerSessionController       Dev 5
+  RegisteredUserController        Dev 5
+  SuperAdminSessionController     Dev 1، يستخدم خدمة الدخول المشتركة
+  AirlineAdminSessionController   Dev 2، يستخدم خدمة الدخول المشتركة
+PublicSite/
+  HomeController                  Dev 5
+  FlightController                Dev 3
+  CompareController               Dev 3
+  DestinationController           Dev 1
+  ContactMessageController        Dev 5
+Customer/
+  BookingFlowController           Dev 4
+  SeatHoldController              Dev 4
+  BookingController               Dev 4
+  BookingLookupController         Dev 4
+  TicketController                Dev 4
+  ProfileController               Dev 4
+  PaymentController               Dev 5
+  CreditWalletController          Dev 5
+  ReviewController                Dev 3
+  AiConversationController        Dev 3
+SuperAdmin/
+  DashboardController             Dev 3
+  AirlineController               Dev 1
+  AirlineAdminController          Dev 1
+  CustomerController              Dev 1
+  ReviewModerationController      Dev 1
+  AiConversationController        Dev 1
+  NotificationLogController       Dev 1
+  ContactMessageController        Dev 1
+  FlightController                Dev 2
+  PaymentController               Dev 2
+  CountryController               Dev 3
+  CreditController                Dev 3
+  BookingController               Dev 4
+  CityController                  Dev 4
+  AirportController               Dev 5
+AirlineAdmin/
+  DashboardController             Dev 2
+  FlightController                Dev 2
+  BookingController               Dev 2
+  ReviewController                Dev 2
+Webhooks/
+  StripeWebhookController         Dev 5
+</code></pre>
+<p>هذه أسماء مقترحة لتوضيح الملكية، وليست دعوة لإنشاء كل الملفات دفعة واحدة. تُنقل/تُستخدم الملفات الفارغة الحالية تدريجيًا ويُحدّث استيرادها. لا حاجة لـ Controller عام لكل جدول وسيط؛ <code>BookingFlight</code> جزء من خدمة الحجز، و<code>FlightClass</code> جزء من إدارة الرحلة.</p>
+<p>كل Controller مسؤول عن استقبال الطلب والتفويض والتحقق واستدعاء الخدمة وإرجاع النتيجة. منطق الرصيد والمقاعد والدفع لا يتكرر داخل عدة Controllers.</p>
+<h2>5. Dev 1 — إدارة السوبر أدمن</h2>
+<h3>النطاق المعتمد كاملًا</h3>
+<p>A0 Admin login، A2 Airlines، A3 Airline admins، A4 Customers، A10 Review moderation، A11 AI conversations، A12 Notification logs، A13 Messages، B17 Destination guide، D1 About us.</p>
+<h3>يبدأ بهذا الترتيب</h3>
+<ol>
+<li>فصل صفحات الإدارة الخاصة به عن القالب العام عند الحاجة، وإبقاء النماذج الحالية أساسًا بصريًا.</li>
+<li>ربط <code>/admin/login</code> بخدمة الدخول من Dev 5. لا يبني نظام Auth ثانيًا. رفض العميل وAirline Admin وإنهاء أي جلسة نتجت عن محاولة دور خاطئ.</li>
+<li>تنفيذ A2: قائمة الشركات، الإنشاء والتعديل، رفع الشعار، حالات pending/active/suspended، اعتماد وتعليق الشركة. منع حذف شركة لها حجوزات دون سياسة معلنة.</li>
+<li>تنفيذ A3: إنشاء User وAirlineAdmin داخل Transaction؛ تشفير كلمة المرور، فريدة البريد، وربط الموظف بشركة صحيحة. عدم إنشاء موظف بلا حساب أو العكس.</li>
+<li>تنفيذ A4: قائمة العملاء وعدّ الحجوزات والتفاصيل والحظر. يملك migration حالة الحظر ويتفق مع Dev 5 على منع المحظور من متابعة الطلبات والجلسات الحالية.</li>
+<li>تنفيذ الإشراف على المراجعات، قائمة المحادثات وقراءتها، سجل الإشعارات، ورسائل التواصل وmark handled. يستخدم بيانات وخدمات أصحابها، لا يعيد تنفيذ AI أو الإرسال.</li>
+<li>تنفيذ دليل الوجهات من Country → City → Airport وحقول النصائح والنقل والموسم، ثم About.</li>
+</ol>
+<h3>يسلّم مبكرًا</h3>
+<ul>
+<li>شركتين تجريبيتين، موظف لكل شركة، وشركة معلقة لاختبار الفصل والصلاحيات.</li>
+<li>عقد قراءة حالة الشركة للبحث والحجز والدخول.</li>
+<li>عقد قراءة المحادثة مع Dev 3، وعقد رسائل التواصل مع Dev 5.</li>
+</ul>
+<h3>القبول</h3>
+<ul>
+<li>CRUD حقيقي، تحقق تحت الحقول، ترقيم صفحات وفلاتر، وحالات فارغة وأخطاء واضحة.</li>
+<li>حساب الشركة A لا يصل إلى B، والمستخدم غير الإداري لا يستطيع أي عملية إدارية حتى بطلب يدوي.</li>
+<li>المراجعة المخفية تختفي من العرض العام، والرسالة المعالجة تبقى محفوظة بحالتها.</li>
+</ul>
+<p>الفرع المقترح: <code>codex/dev1-super-admin</code>.</p>
+<h2>6. Dev 2 — شركة الطيران وقراءة الرحلات والمدفوعات للإدارة</h2>
+<h3>النطاق المعتمد كاملًا</h3>
+<p>C0 Airline admin login، C1 Dashboard، C2 Flights list، C3 Create/edit flight، C4 Flight details، C5a Bookings، C5b Booking details، C6 Reviews، A6 Super admin flights، A8 Payments.</p>
+<h3>يبدأ بهذا الترتيب</h3>
+<ol>
+<li>ربط دخول الشركة بخدمة Auth المشتركة، وربط جميع الاستعلامات بشركة الموظف من الجلسة. لا يثق في <code>airline_id</code> المرسل من المتصفح.</li>
+<li>تنفيذ إنشاء وتعديل الرحلة: المطارات، الأوقات، الحالة، درجات المقصورة، السعر والأمتعة وتخطيط المقاعد.</li>
+<li>يملك <code>FlightInventoryService</code>: إنشاء الرحلة ودرجاتها والمقاعد في Transaction؛ حساب العدد من الصفوف والمقاعد، والتحقق من أن الوصول بعد المغادرة وأن المطارين مختلفان.</li>
+<li>إضافة قيود مناسبة، مثل تفرّد رقم المقعد داخل الدرجة وتفرّد الدرجة داخل الرحلة بعد مراجعة البيانات. لا يغيّر مقعدًا محجوزًا أو يحذفه بتعديل مخطط المقصورة.</li>
+<li>تنفيذ القائمة والتفاصيل وخريطة المقعد. FlightInventoryService ينشئ المقاعد؛ خدمة Dev 4 وحدها تدير hold/book/release أثناء الحجز.</li>
+<li>تنفيذ حجوزات الشركة وتفاصيلها ومراجعات رحلاتها. بالحجز متعدد الشركات لا يعرض أرجل أو تذاكر شركة ثانية ولا بيانات دفع غير لازمة.</li>
+<li>تنفيذ A6 كقراءة على جميع الشركات مع الفلاتر، وA8 كقراءة لسجلات الدفع. لا يعيد تنفيذ الدفع أو يحتسب نجاحه بنفسه.</li>
+<li>بناء Dashboard من البيانات الفعلية بعد جاهزية الحجوزات والدفع، مع تعريف هل الإيراد إجمالي أم محصل ونافذة التاريخ.</li>
+</ol>
+<h3>يسلّم مبكرًا</h3>
+<ul>
+<li>عينات رحلات بدرجات ومقاعد، رحلة ممتلئة وأخرى ملغاة.</li>
+<li>عقد Flight/Class/Seat متفق عليه مع Dev 3 وDev 4.</li>
+<li>اختبار شركة ثانية لإثبات العزل.</li>
+</ul>
+<h3>القبول</h3>
+<ul>
+<li>موظف شركة لا يقرأ أو يعدّل رحلة/حجز شركة ثانية بتغيير ID.</li>
+<li>إنشاء الرحلة يولد العدد الصحيح من المقاعد، والتعديل لا يهدم حجوزات موجودة.</li>
+<li>فلاتر القوائم والإحصائيات لا تعتمد على بيانات العرض التجريبية.</li>
+</ul>
+<p>الفرع المقترح: <code>codex/dev2-airline</code>.</p>
+<h2>7. Dev 3 — اكتشاف الرحلات وAI والرصيد الإداري</h2>
+<h3>النطاق المعتمد كاملًا</h3>
+<p>B2 Search results، B3 Flight details، B4 Compare، B14 Write a review، A5a Countries، B16 AI assistant، A9 Credits، D2 FAQ، D3 Terms، A1 Super admin dashboard.</p>
+<h3>يبدأ بهذا الترتيب</h3>
+<ol>
+<li>تنفيذ Countries CRUD أولًا وتسليم CountrySeeder وعقد خيارات الدول لـ Dev 4. لا ينتظر اكتمال AI لفتح بقية الفريق.</li>
+<li>تنفيذ <code>FlightSearchService</code>: البحث والفلاتر والفرز والترقيم، حالة الشركة والرحلة، الدرجات والمقاعد المتاحة. دعم اختيار ذهاب ثم عودة، وليس مجرد قائمتين غير مترابطتين.</li>
+<li>تفاصيل الرحلة والمقارنة لرحلتين أو ثلاث، مع رفض IDs غير صالحة والتحقق من حد المقارنة من السيرفر.</li>
+<li>تنفيذ <code>CreditService</code> المشترك قبل دمج الدفع: زيادة/خصم/تسوية رصيد داخل Transaction وقفل سجل العميل، إنشاء Ledger، ومنع الرصيد السالب وتكرار نفس العملية. Dev 5 وDev 4 يستدعيانها ولا يعدّلان الرصيد مباشرة.</li>
+<li>تنفيذ A9 باستخدام الخدمة مع سبب التسوية وهوية المسؤول وصلاحية Super Admin.</li>
+<li>تنفيذ مراجعة مرتبطة بعميل وحجز ورِجل مكتملة تخصه، وتحديد قيد يمنع التكرار. مراجعة العلاقة الحالية قبل إضافة أي migration لربط review بالرِجل/الراكب المناسب حسب قرار الفريق.</li>
+<li>تنفيذ AI عبر خدمة مستقلة وعقد واضح: أوضاع find/compare/tips، سجل محادثات بملكية العميل، وعرض بطاقات من IDs رحلات فعلية. لا يختلق AI أسعارًا أو ينفذ حجزًا/دفعًا تلقائيًا.</li>
+<li>تجهيز واجهتي PassportExtraction وPrePaymentCheck لخدمة Dev 4، مع مهلة وفشل واضح وتأكيد العميل للبيانات المستخرجة. ملكية صفحة B5 تبقى لـ Dev 4.</li>
+<li>Dashboard السوبر أدمن، FAQ وTerms بعد تثبيت سياسات الحجز والإلغاء مع الفريق.</li>
+</ol>
+<h3>تنبيه قدرة الفريق</h3>
+<p>هذا المطور يملك بحثًا وAI وخدمة رصيد، وهي أعمال أثقل من عدّ الشاشات. ننفذ أولًا Countries → Search → Credits، ثم المراجعات واللوحة، ثم AI. إذا ضاق الوقت تبقى حالة AI غير متاح واضحة بدل ادعاء أنه يعمل.</p>
+<h3>القبول</h3>
+<ul>
+<li>نتائج الفلاتر حقيقية؛ العميل لا يراجع حجز غيره أو رحلة غير مكتملة.</li>
+<li>تسويتان متزامنتان لا تفسدان الرصيد، وإعادة العملية ذات المفتاح نفسه لا تضاعفها.</li>
+<li>محادثة عميل لا تظهر لعميل آخر، وفشل مزود AI لا يعطل البحث والدفع الأساسيين دون سياسة معتمدة.</li>
+</ul>
+<p>الفرع المقترح: <code>codex/dev3-discovery-ai</code>.</p>
+<h2>8. Dev 4 — الحجز والحساب والمدن</h2>
+<h3>النطاق المعتمد كاملًا</h3>
+<p>B5 Passengers، B6 Seat selection، B7 Review، B9 Confirmation، B10 My bookings، B11 Booking details، B12 Booking lookup، A7 Admin bookings، A5b Cities، B15 Profile.</p>
+<h3>يبدأ بهذا الترتيب</h3>
+<ol>
+<li>تنفيذ Cities CRUD وخيارات المدن من Country الخاص بـ Dev 3 لتسليمها سريعًا لـ Dev 5.</li>
+<li>تعريف Draft الحجز في Session: اختيار الأرجل والدرجات وأعداد الركاب، بيانات المسافرين، المقاعد لكل رِجل، ومرحلة الحجز. يحفظ IDs فقط للأسعار ويعيد التسعير من السيرفر.</li>
+<li>تنفيذ <code>BookingFlowService</code> وForm Requests للمسافرين. يمنع تجاوز الخطوات أو تغيير السعر والملكية من المتصفح. يحدد عمر الطفل/الرضيع وقواعد الجواز مع الفريق.</li>
+<li>تنفيذ <code>SeatHoldService</code>: hold لمدة 10 دقائق محسوبة من وقت السيرفر، قفل/تحديث ذري للمقاعد، فحص السعة، انتهاء الحجز، وتحرير المقعد. لا يكفي عداد JavaScript.</li>
+<li>صفحة Review تعرض تسعيرًا موثوقًا وملخصًا لكل رِجل. يسلم لـ Dev 5 حجزًا pending ومبلغًا قابلًا للدفع، وفق عقد موحد لا يتحول إلى حجزين عند إعادة الإرسال.</li>
+<li>تنفيذ <code>BookingFinalizationService</code> و<code>TicketService</code>: بعد نجاح موثق للدفع/الرصيد، تثبيت المقاعد وإصدار التذاكر وQR وPDF مرة واحدة. تحديد سلوك الدفع الناجح بعد انتهاء hold قبل الإطلاق.</li>
+<li>تصحيح مسار التأكيد إلى <code>/bookings/{code}/confirmation</code> مع تحديث الروابط. عرض الصفحة وحده لا يؤكد الحجز.</li>
+<li>تنفيذ My bookings والتفاصيل وLookup وتحديث الملف وكلمة المرور. Lookup بالرمز واسم العائلة مع rate limit ونتيجة محدودة؛ تحميل PDF يحتاج تحققًا إضافيًا وصلاحية.</li>
+<li>تنفيذ <code>BookingCancellationService</code>: معاينة الرصيد المتوقع ثم إلغاء موثق مرة واحدة وتحرير المقاعد واستدعاء CreditService. تحديد قواعد تغيير الحجز قبل بناء Change booking.</li>
+<li>تنفيذ A7 بقائمة وتفاصيل وصلاحيات انتقال الحالة؛ لا يسمح بتجاوز الدفع أو تكرار التذاكر بمجرد اختيار حالة من dropdown.</li>
+<li>يملك إشعارات التأكيد والتذكير وJobs وسجل الإرسال؛ Dev 1 يقرأ السجل. ربط مسح الجواز والفحص مع خدمات Dev 3 لاحقًا.</li>
+</ol>
+<h3>يسلّم مبكرًا</h3>
+<ul>
+<li>عقد pending booking والتسعير والمقاعد المحجوزة مؤقتًا لـ Dev 5.</li>
+<li>واجهة finalize/cancel/idempotency المتفق عليها مع Dev 5 وDev 3.</li>
+<li>عينات حجز one-way وround-trip وملغى ومكتمل.</li>
+</ul>
+<h3>القبول</h3>
+<ul>
+<li>مستخدمان يتنافسان على المقعد نفسه: ينجح واحد فقط.</li>
+<li>لا يمكن تجاوز الخطوات أو فتح حجز عميل آخر، ولا يؤدي refresh إلى تذكرة أو رصيد إلغاء إضافي.</li>
+<li>اختبار عمل QR وPDF وصلاحية التحميل، وعدم إظهار بيانات الجواز كاملة في السجلات العامة.</li>
+</ul>
+<p>الفرع المقترح: <code>codex/dev4-booking</code>.</p>
+<h2>9. Dev 5 — Auth والدفع والواجهة العامة والمطارات</h2>
+<h3>النطاق المعتمد كاملًا</h3>
+<p>B1 Landing، B18a Login، B18b Register، B8 Payment، B13 Credits wallet، D4 Privacy، D5 Contact، D6a 403، D6b 404، D6c 500، A5c Airports.</p>
+<h3>يبدأ بهذا الترتيب</h3>
+<ol>
+<li>تنفيذ Auth المشترك أولًا: التسجيل ينشئ User وCustomer برصيد صفري داخل Transaction، تسجيل الدخول والخروج، تجديد Session عند الدخول، وإبطالها عند الخروج، rate limit، والتحقق تحت الحقول.</li>
+<li>يملك Role middleware وPolicies الأساسية وتسجيلها في Laravel 12، وحسابات Seed للأدوار الثلاثة. Dev 1 وDev 2 يملكان صفحات دخول دوريهما ويستخدمان نفس الخدمة. لا يختار المستخدم دورًا إداريًا عند التسجيل العام.</li>
+<li>قواعد الحماية: <code>/my</code> و<code>/book</code> للعميل؛ <code>/admin</code> للسوبر أدمن؛ <code>/airline</code> لموظف الشركة؛ كل تسجيل دخول يرفض الأدوار الأخرى. فحص حظر العميل وحالة الشركة بالتنسيق مع Dev 1.</li>
+<li>تنفيذ Airports CRUD بعد تسلم City من Dev 4، مع تفرّد كود IATA والتحقق من المدينة. يسلّم بيانات المطارات مبكرًا لـ Dev 2.</li>
+<li>ربط Landing بعقد البحث من Dev 3: المدينة/المطار، التواريخ، الركاب، الدرجة، الميزانية. الحفاظ على التصميم الحالي وإزالة البيانات التجريبية تدريجيًا.</li>
+<li>تنفيذ Contact فعليًا إلى قاعدة البيانات، وقراءة المحفظة من CreditService دون منطق خصم مستقل. Privacy تعكس تخزين الجواز واستخدام AI الفعليين.</li>
+<li>تنفيذ <code>PaymentService</code> وStripe test mode: إنشاء PaymentIntent من قيمة السيرفر، Stripe Elements/SDK للبطاقة، webhook موثّق التوقيع، سجل event ID فريد، وعدم اعتماد redirect أو رسالة المتصفح كنجاح.</li>
+<li>مسار Use credits يستدعي CreditService ويمنع الإنفاق المتزامن. الاتفاق على حجز/استرجاع الرصيد عند فشل الدفع. معالجة الحجز المدفوع كليًا بالرصيد عبر نفس finalize دون فرض Stripe بمبلغ صفر.</li>
+<li>يستدعي BookingFinalizationService من Dev 4 بعد نجاح موثوق، ويعالج retries دون خصم أو تذاكر مكررة. لا ينفذ إصدار التذاكر في خدمة دفع ثانية.</li>
+<li>ربط 403/404/500 بصفحات فعلية دون كشف تفاصيل أخطاء الإنتاج.</li>
+</ol>
+<h3>القبول</h3>
+<ul>
+<li>اختبارات الدخول للأدوار الثلاثة، الدور الخاطئ، حساب محظور، وجلسة منتهية.</li>
+<li>دفع ناجح وفاشل وملغى، webhook متكرر أو بتوقيع خاطئ، ورصيد كامل وجزئي.</li>
+<li>مبلغ من المتصفح لا يغيّر المستحق، وأرقام البطاقات لا تخزن في قاعدة البيانات أو السجلات.</li>
+</ul>
+<p>الفرع المقترح: <code>codex/dev5-auth-payment</code>.</p>
+<h2>10. عقود التسليم بين المطورين</h2>
+<table>
+<thead>
+<tr>
+<th>العقد</th>
+<th>المالك</th>
+<th>المستهلكون</th>
+<th>الحد الأدنى المتفق عليه</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Auth/roles</td>
+<td>Dev 5</td>
+<td>الجميع</td>
+<td>user_id، customer_id/airline_admin_id/super_admin_id، الدور، حالة الحظر والشركة</td>
+</tr>
+<tr>
+<td>Country/City/Airport</td>
+<td>Dev 3 / Dev 4 / Dev 5</td>
+<td>Dev 1 وDev 2 وDev 3</td>
+<td>IDs، الاسم، الرمز، والعلاقات الصحيحة؛ seeders منفصلة</td>
+</tr>
+<tr>
+<td>Flight inventory</td>
+<td>Dev 2</td>
+<td>Dev 3 وDev 4</td>
+<td>flight/class/seat IDs، الأوقات، العملة المتفق عليها، السعر والأمتعة والحالة</td>
+</tr>
+<tr>
+<td>Search selection</td>
+<td>Dev 3</td>
+<td>Dev 4 وDev 5</td>
+<td>أرجل الذهاب/العودة، class IDs، الركاب، فلاتر مسماة وثابتة</td>
+</tr>
+<tr>
+<td>Draft/quote</td>
+<td>Dev 4</td>
+<td>Dev 5</td>
+<td>booking ID/code، الأرجل، hold expiry، subtotal/taxes/fees/total، currency</td>
+</tr>
+<tr>
+<td>Credits</td>
+<td>Dev 3</td>
+<td>Dev 4 وDev 5</td>
+<td>balance، ledger، adjust/debit/credit، operation key وسبب العملية</td>
+</tr>
+<tr>
+<td>Payment outcome</td>
+<td>Dev 5</td>
+<td>Dev 4 وDev 2</td>
+<td>payment ID، booking ID، حالة موثوقة، مبلغ/عملة، مفتاح حدث فريد</td>
+</tr>
+<tr>
+<td>Finalization/tickets</td>
+<td>Dev 4</td>
+<td>Dev 5 وDev 2</td>
+<td>finalize مرة واحدة، ticket IDs، QR/PDF بصلاحيات</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>Dev 3</td>
+<td>Dev 1 وDev 4 وDev 5</td>
+<td>conversation ID، messages، flight IDs، extraction fields/confidence، failure state</td>
+</tr>
+<tr>
+<td>Messages/logs</td>
+<td>Dev 5 / Dev 4</td>
+<td>Dev 1</td>
+<td>message status، notification channel/type/status/timestamps</td>
+</tr>
+</tbody></table>
+<p>هذه عقود PHP/View data أولًا. يمكن توفير JSON للبحث أو المحادثة عند الحاجة، دون فرض API على كل صفحة. العمليات الحساسة تحتاج مفاتيح تكرار محفوظة بقيود قاعدة البيانات؛ أسماء الحقول النهائية تعتمد قبل كتابة migrations.</p>
+<h2>11. مراحل التنفيذ والاعتماد</h2>
+<h3>المرحلة 0 — اتفاق وبداية مستقلة</h3>
+<p>الجميع يشغّل المشروع، يراجع صفحاته المعتمدة ويستخدم فرعه. الاتفاق على الروتات والحقول والمكونات وسياسات المال. كل مطور يستطيع العمل بFixtures، دون انتظار صفحة شخص آخر.</p>
+<h3>المرحلة 1 — فتح الاعتمادات مبكرًا</h3>
+<ul>
+<li>Dev 5: Auth والأدوار والـ Seed accounts.</li>
+<li>Dev 3: Countries وعقد البحث وCreditService الأولي.</li>
+<li>Dev 4: Cities وعقد draft/hold/finalize.</li>
+<li>Dev 1: Airlines وAirline admins وحظر العملاء.</li>
+<li>Dev 2: Flight form وInventory على بيانات مطارات تجريبية متفق عليها.</li>
+</ul>
+<p>ترتيب دمج بيانات المواقع: Countries → Cities → Airports → Flights. تستطيع الفروع استخدام Fixtures موحدة قبل الدمج؛ لا يبدل أحد IDs تجريبية بصمت.</p>
+<h3>المرحلة 2 — أول مسار كامل من قاعدة البيانات</h3>
+<p>الهدف: إدارة تنشئ شركة وموظفًا → الموظف ينشئ رحلة → عميل يبحث ويختارها → يسجل الركاب ويمسك مقعدًا → يصل إلى Review بسعر من السيرفر. بوابة القبول: لا mock flights ولا تجاوز خطوات أو صلاحيات في هذا المسار.</p>
+<h3>المرحلة 3 — المال وما بعد الحجز</h3>
+<p>دمج Credits → Payment → Finalization → Tickets/Confirmation → My bookings → Cancellation. بعدها لوحات المدفوعات والحجوزات والتقارير. بوابة القبول: نجاح وفشل وإعادة محاولات وتزامن واختبارات عزل.</p>
+<h3>المرحلة 4 — AI والإشعارات والإكمال</h3>
+<p>المحادثات والبحث الذكي والتوصيات ومسح الجواز وفحص ما قبل الدفع، ثم إشعارات التأكيد والتذكير والصفحات الإدارية التابعة. يمكن تطويرها بالتوازي بعقود Mock، لكن دمجها لا يسبق ثبات التدفق الأساسي.</p>
+<h3>المرحلة 5 — تسليم متكامل</h3>
+<p>فحص الشاشات الـ51 مقابل الجرد، حالات التحميل/الفراغ/الخطأ، التحقق تحت الحقول، صلاحيات الأدوار، وإزالة Preview من الوظائف التي أصبحت حقيقية. اعتماد الهاتف بعرض 390px على B1/B2/B3/B5/B6/B8/B9/B10 وإجراء فحص أساسي لبقية الصفحات.</p>
+<p>الأيام الأربعة بالملف ترتيب مقترح للفرونت إند، وليست تقديرًا موثوقًا لتنفيذ كل الباك إند والدفع وAI من الحالة الحالية. بعد المرحلة 0 يقدّر كل مطور مهامه، ويُبنى الموعد على قدرته والاختبارات والتكامل وتوفر حسابات الخدمات.</p>
+<h2>12. تجنّب تعارض الملفات</h2>
+<ul>
+<li>كل مطور يملك ملف routes لمنطقته قدر الإمكان؛ مناطق مشتركة مثل SuperAdmin تُقسّم لملفات فرعية أو تُراجع تغييراتها قبل الدمج.</li>
+<li>القوالب الحالية تجمع شاشات عدة في <code>staff/panel.blade.php</code>, <code>customer/account.blade.php</code>, <code>booking/checkout.blade.php</code>, <code>pages/information.blade.php</code>. تُستخرج شاشة محددة إلى View خاص بها عند ربطها، بدل تعديل الجميع لنفس الشروط في ملف واحد.</li>
+<li>Dev 5 ينسق تغييرات Auth و<code>bootstrap/app.php</code>؛ Dev 2 تغييرات مقاعد الرحلات؛ Dev 4 حالة الحجز والتذاكر؛ Dev 3 الرصيد. المستهلك يعدّل عبر العقد لا عبر كتابة نسخة ثانية.</li>
+<li>Dev 1 يملك migrations حظر العملاء؛ بقية migrations لكل ميزة يملكها صاحبها، بأسماء وتوقيتات فريدة وترتيب مفاتيح أجنبية صحيح.</li>
+<li>كل مطور يضيف Seeder خاصًا بمجاله؛ يدمج منسق متفق عليه الاستدعاءات في DatabaseSeeder. لا حسابات إنتاج أو كلمات مرور حقيقية داخل Git.</li>
+<li>يتفق الفريق على شكل المكونات. يبني كل شخص احتياجاته دون انتظار مالك Layout وحيد، ثم توحد النسخ المتكررة عند التكامل وفق الملف المعتمد.</li>
+</ul>
+<h2>13. تعريف اكتمال المهمة</h2>
+<ol>
+<li>الشاشة المطلوبة موجودة وتقرأ/تكتب قاعدة البيانات حسب نوعها؛ Static لا يحتاج Controller أو قاعدة بيانات بلا داعٍ.</li>
+<li>route/controller/request/policy/service مترابطة بالقدر اللازم، مع validation وتفويض على السيرفر.</li>
+<li>اختبار نجاح واختبار رفض ذي معنى للميزة، واختبارات تزامن وتكرار للرصيد والمقاعد والدفع والإلغاء.</li>
+<li>الفشل لا يترك User بلا دور، أو دفعة بلا معالجة، أو تذكرة مكررة، أو رصيدًا سالبًا.</li>
+<li>لا بيانات بطاقة محفوظة ولا جوازات منشورة في public أو logs. لا يسمح AI بإجراء مالي نيابة عن العميل.</li>
+<li>يعمل <code>npm run build</code>، وتُشغّل اختبارات PHP المناسبة في بيئة المطور. لم تُشغّل اختبارات تنفيذية ضمن إعداد هذه الخطة.</li>
+<li>تسليم PR يوضح ما اكتمل، migration/config المطلوب، الاختبارات، وما لا يزال Mock أو معتمدًا على خدمة غير موصولة.</li>
+</ol>
+<h2>14. أول مهمة عملية لكل شخص</h2>
+<table>
+<thead>
+<tr>
+<th>المطور</th>
+<th>أول تسليم قابل للمراجعة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dev 1</td>
+<td>إنشاء شركة وموظفها فعليًا، مع التحقق وTransaction وعقد حالات الشركة</td>
+</tr>
+<tr>
+<td>Dev 2</td>
+<td>إنشاء رحلة بدرجاتها ومقاعدها من حساب شركة، مع اختبار منع شركة ثانية</td>
+</tr>
+<tr>
+<td>Dev 3</td>
+<td>Countries CRUD وعقد Search وCreditService مكتوب؛ ثم البحث الفعلي</td>
+</tr>
+<tr>
+<td>Dev 4</td>
+<td>Cities CRUD وعقد Session draft؛ ثم منع تخطي خطوات الحجز</td>
+</tr>
+<tr>
+<td>Dev 5</td>
+<td>تسجيل عميل ودخوله وخروجه، Middleware للأدوار وSeed accounts للأدوار الثلاثة</td>
+</tr>
+</tbody></table>
+<p>لا نبدأ بإنشاء Controllers جديدة فارغة لمجرد إكمال قائمة أسماء؛ يبدأ كل شخص بمسار عمل صغير مكتمل من الطلب إلى قاعدة البيانات ثم يوسّعه حسب ترتيبه.</p>
+</body></html>
