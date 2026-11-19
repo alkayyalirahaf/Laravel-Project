@@ -22,8 +22,8 @@
                 <a href="{{ route('flights.search') }}">{{ __('Flights') }}</a>
                 <a href="{{ route('destinations') }}">{{ __('Destinations') }}</a>
                 <a href="{{ route('booking.lookup') }}">{{ __('Booking lookup') }}</a>
-                <a href="{{ route('my.bookings') }}">My bookings</a>
-                <a class="button secondary" href="{{ route('login') }}">Sign in</a>
+                <a href="{{ route('my.bookings') }}">{{ __('My bookings') }}</a>
+                <a class="button secondary" href="{{ route('login') }}">{{ __('Sign in') }}</a>
                 @show
             </nav>
         </div>
@@ -53,7 +53,7 @@
             @section('footer-links')
             <nav aria-label="{{ __('Footer') }}">
                 @foreach(['about' => 'About', 'faq' => 'FAQ', 'terms' => 'Terms', 'privacy' => 'Privacy', 'contact' => 'Contact', 'assistant' => 'AI assistant'] as $name => $label)
-                    <a href="{{ route($name) }}">{{ $label }}</a>
+                    <a href="{{ route($name) }}">{{ __($label) }}</a>
                 @endforeach
             </nav>
             @show

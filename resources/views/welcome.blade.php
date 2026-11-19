@@ -8,29 +8,21 @@
     <a href="#destinations">{{ __('Destinations') }}</a>
     <a href="#ai-copilot">{{ __('AI Assistant') }}</a>
     <a href="#how-it-works">{{ __('How It Works') }}</a>
-    <div class="landing-language">
-        @foreach(['en' => 'English', 'ar' => 'العربية'] as $locale => $language)
-            <form method="POST" action="{{ route('home.language', $locale) }}">
-                @csrf
-                <button type="submit" lang="{{ $locale }}" aria-label="{{ $language }}" aria-pressed="{{ app()->isLocale($locale) ? 'true' : 'false' }}">{{ strtoupper($locale) }}</button>
-            </form>
-        @endforeach
-    </div>
+    <x-landing-language />
     <a href="{{ route('login') }}">{{ __('Sign In') }}</a>
     <a class="button" href="#flight-search">{{ __('Find a Flight') }}</a>
 @endsection
 
 @php
     $catalog = json_decode(file_get_contents(resource_path('views/shared/destination-catalog.json')), true, flags: JSON_THROW_ON_ERROR);
-    $featured = [$catalog[0]['places'][0], $catalog[1]['places'][2], $catalog[0]['places'][4], $catalog[1]['places'][7]];
 @endphp
 
 @section('content')
 <section class="landing-hero" aria-labelledby="landing-title">
     <div class="landing-hero-image" aria-hidden="true">
-        @foreach($featured as $place)
-            <img class="hero-slide" data-source="{{ $place['image'] }}" @if($loop->first) src="{{ asset('assets/landing/catalog/' . strtolower($place['code']) . '.webp') }}" fetchpriority="high" @else data-src="{{ asset('assets/landing/catalog/' . strtolower($place['code']) . '.webp') }}" @endif alt="">
-        @endforeach
+        <video class="hero-video" muted loop playsinline preload="none" poster="{{ asset('assets/landing/catalog/jp.webp') }}">
+            <source src="{{ asset('assets/landing/hero-travel.mp4') }}" type="video/mp4">
+        </video>
     </div>
     <div class="landing-wrap hero-copy">
         <h1 id="landing-title">{{ __('Your next chapter starts') }} <em>{{ __('above the clouds.') }}</em></h1>
@@ -52,17 +44,25 @@
     </svg>
 
     <div class="landing-wrap search-overlap">
-        <x-landing-search />
+        <x-landing-travel-tools />
     </div>
 
-    <section class="landing-wrap landing-section" id="destinations" data-reveal>
-        <div class="landing-section-head">
-            <h2>{{ __('Where will curiosity') }} <em>{{ __('take you?') }}</em></h2>
-            <a class="landing-text-link" href="{{ route('destinations') }}">{{ __('All destinations') }} &#8599;</a>
+    <section id="destinations" class="destination-showcase" aria-labelledby="destination-showcase-title">
+        <h2 id="destination-showcase-title">{{ __('See the world') }}</h2>
+        <div class="landing-wrap">
+            <a class="destination-directory-link" href="{{ route('destinations') }}">
+                {{ __('Browse all destinations') }} <span aria-hidden="true">&#8599;</span>
+            </a>
         </div>
-        <div class="destination-grid">
-            @foreach($featured as $place)
-                <x-destination-card :place="$place" local-image translate-labels />
+        <div class="destination-track" data-destination-track tabindex="0" role="region" aria-labelledby="destination-showcase-title">
+            @foreach(collect($catalog)->pluck('places')->collapse()->keyBy('code')->only(['JP', 'TH', 'LOND', 'PARI', 'AG', 'KY', 'GD', 'KN', 'VC', 'ITO', 'LIR', 'RTB', 'OAX', 'PXM', 'TUS', 'PSP']) as $place)
+                <article class="destination-slide">
+                    <img src="{{ asset('assets/landing/catalog/' . strtolower($place['code']) . '.webp') }}" alt="" draggable="false" width="640" height="425" loading="lazy" decoding="async">
+                    <span class="destination-slide-copy">
+                        <span>{{ $place['code'] }}</span>
+                        <strong>{{ __($place['name']) }}</strong>
+                    </span>
+                </article>
             @endforeach
         </div>
     </section>
@@ -150,7 +150,7 @@
     <p>{{ __('Find a flight worth looking forward to.') }}</p>
     <nav aria-label="{{ __('Footer') }}">
         <a href="#flight-search">{{ __('Flights') }}</a>
-        <a href="{{ route('destinations') }}">{{ __('Destinations') }}</a>
+        <a href="#destinations">{{ __('Destinations') }}</a>
         <a href="{{ route('assistant') }}">{{ __('AI Assistant') }}</a>
         <a href="{{ route('booking.lookup') }}">{{ __('Booking lookup') }}</a>
         @foreach(['contact' => 'Contact', 'terms' => 'Terms', 'privacy' => 'Privacy'] as $name => $label)

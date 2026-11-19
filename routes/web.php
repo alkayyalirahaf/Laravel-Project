@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\SetLandingLocale;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AdminAuthController;
 
@@ -17,7 +17,8 @@ Route::post('/language/{locale}', function (Request $request, string $locale) {
 Route::view('/flights', 'flights.index', ['title' => 'Search Results'])->name('flights.search');
 Route::view('/flights/{flight}', 'flights.show', ['title' => 'Flight Details'])->whereNumber('flight')->name('flights.show');
 Route::view('/compare', 'flights.compare', ['title' => 'Compare'])->name('compare');
-Route::view('/destinations/{country?}', 'pages.destinations', ['title' => 'Destination Guide'])->name('destinations');
+Route::view('/destinations', 'pages.destinations')->middleware(SetLandingLocale::class)->name('destinations');
+Route::redirect('/destinations/{country}', '/destinations');
 Route::view('/booking-lookup', 'booking.lookup', ['title' => 'Booking Lookup'])->name('booking.lookup');
 Route::view('/assistant', 'pages.assistant', ['title' => 'AI Assistant'])->name('assistant');
 
