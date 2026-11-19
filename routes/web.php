@@ -1,14 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminAuthController;
 use App\Http\Middleware\SetLandingLocale;
 use Illuminate\Http\Request;
-use App\Http\Controllers\AdminAuthController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/', function (Request $request) {
-    $locale = $request->session()->get('landing_locale');
-    if ($locale !== null) app()->setLocale($locale);
-    return view('welcome');
-})->name('home');
+Route::view('/', 'welcome')->middleware(SetLandingLocale::class)->name('home');
 
 Route::post('/language/{locale}', function (Request $request, string $locale) {
     $request->session()->put('landing_locale', $locale);
