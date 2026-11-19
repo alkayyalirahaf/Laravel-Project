@@ -95,3 +95,51 @@ summary { cursor: pointer; }
     .hero { grid-template-columns: minmax(0, 1fr); }
     .flight-card .actions { width: 100%; }
 }
+
+.booking-cabin {max-width:24rem;margin-inline:auto}
+.booking-cabin table {min-width:0;width:auto;margin-inline:auto;border-collapse:separate;border-spacing:0}
+.booking-cabin caption {padding:.55rem 0 .85rem;color:#f4e4ba}
+.booking-cabin th,.booking-cabin td {padding:.16rem .22rem;border:0;text-align:center;font-variant-numeric:tabular-nums}
+.booking-cabin thead,.booking-cabin tfoot {color:#f4e4ba}
+.booking-cabin tbody {background:#1c1914}
+.booking-cabin tbody th.booking-cabin-edge,.booking-cabin tbody td.booking-cabin-edge {
+    padding-inline:.45rem;background:#282219;color:#c9b794;font-size:.78rem;font-weight:600;
+}
+.booking-cabin tbody th.booking-cabin-edge {border-inline-start:2px solid #78633a}
+.booking-cabin tbody td.booking-cabin-edge {border-inline-end:2px solid #78633a}
+.booking-cabin-aisle {min-width:1.65rem;background:#100f0d}
+.booking-seat {position:relative;display:block}
+.booking-seat span {
+    display:grid;place-items:center;width:1.75rem;height:1.75rem;
+    border:1px solid #78633a;border-radius:.4rem;color:#f4e4ba;cursor:pointer;
+}
+.booking-seat input:not(:disabled) + span::before {
+    content:'';width:.85rem;height:.83rem;border:1px solid currentColor;
+    border-bottom-width:3px;border-radius:.23rem .23rem .1rem .1rem;
+    box-shadow:-.16rem .12rem 0 -.07rem currentColor,.16rem .12rem 0 -.07rem currentColor;
+}
+.booking-seat input:disabled + span {border-color:transparent;color:#aaa;cursor:default}
+.booking-seat input:checked + span {background:#d4af37;border-color:#d4af37;color:#141008}
+.booking-seat input:focus-visible + span {outline:2px solid #d4af37;outline-offset:2px}
+.booking-cabin-legend {display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem .9rem;margin-block-start:.75rem;font-size:.78rem}
+.booking-cabin-legend span {display:inline-flex;align-items:center;gap:.35rem}
+.booking-cabin-legend span::before {content:'';width:.7rem;height:.7rem;border:1px solid #78633a;border-radius:.2rem}
+.booking-cabin-legend span:nth-child(2)::before {background:#d4af37;border-color:#d4af37}
+.booking-cabin-legend span:last-child::before {content:'×';width:auto;height:auto;border:0;color:#aaa}
+
+.passenger-layout {
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(16rem,21rem);
+    gap:1.25rem;align-items:start;margin-block:1.25rem;
+}
+.passenger-panel {padding:clamp(1rem,2.5vw,1.65rem);border-color:#655236}
+.passenger-panel h2 {margin:0 0 .6rem;color:#f4e4ba}
+.passenger-panel p {color:#b9ad9c}
+.passenger-panel .form-grid {margin-block-start:1rem;min-inline-size:0}
+.passenger-panel legend {padding-block-end:.55rem;color:#f4e4ba;font-weight:600}
+.passenger-summary dl {margin-block:1rem}
+.passenger-summary dl > div {display:flex;justify-content:space-between;gap:.75rem;padding-block:.55rem;border-bottom:1px solid #403626}
+.passenger-summary dd {margin:0;text-align:end;font-weight:600}
+.passenger-summary .button {margin-block-start:.65rem}
+@media(max-width:52rem) {
+    .passenger-layout {grid-template-columns:minmax(0,1fr)}
+}

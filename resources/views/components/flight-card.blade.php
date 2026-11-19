@@ -1,4 +1,4 @@
-@props(['flight'])
+@props(['flight', 'preferredCabin' => null])
 <article class="panel flight-card">
     <div>
         <span class="badge">{{ $flight['airline'] }} · {{ $flight['number'] }}</span>
@@ -8,6 +8,6 @@
     </div>
     <div class="actions">
         {{ $slot }}
-        <a class="button secondary" href="{{ route('flights.show', $flight['id']) }}">Flight details</a>
+        <a class="button secondary" href="{{ route('flights.show', array_filter(['flight' => $flight['id'], 'cabin' => $preferredCabin])) }}">Flight details</a>
     </div>
 </article>

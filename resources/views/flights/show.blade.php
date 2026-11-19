@@ -5,6 +5,11 @@
 @endphp
 @php
     $flight = $demoFlights->firstWhere('id', (int) request()->route('flight'));
+    $preferredCabin = request()->query('cabin');
+    $fares = $flight['fares'] ?? [];
+    if (is_string($preferredCabin) && isset($fares[$preferredCabin])) {
+        $fares = [$preferredCabin => $fares[$preferredCabin]] + $fares;
+    }
 @endphp
 
 @section('title'){{ $title }}@endsection
@@ -21,9 +26,10 @@
     <section class="section">
         <h2>Choose a cabin</h2>
         <div class="cards">
-            @foreach($flight['fares'] as $class => [$price, $cabin, $checked])
+            @foreach($fares as $class => [$price, $cabin, $checked])
                 <article class="panel">
                     <h3>{{ ucfirst($class) }}</h3><p>JOD {{ $price }}</p><p>{{ $cabin }} kg cabin · {{ $checked }} kg checked</p>
+                    @if($class === $preferredCabin)<p class="badge">Your searched cabin</p>@endif
                     <a class="button" href="{{ route('book.passengers', ['flight' => $flight['id'], 'class' => $class]) }}">Continue with {{ $class }}</a>
                 </article>
             @endforeach

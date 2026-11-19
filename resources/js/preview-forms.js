@@ -12,7 +12,9 @@ document.querySelectorAll('[data-preview-form]').forEach((form) => {
             const found = fields.get('code').trim().toUpperCase() === 'YTDEMO'
                 && fields.get('last_name').trim().toLowerCase() === 'traveler';
             lookupResult.hidden = !found;
-            status.textContent = found ? 'Sample booking found.' : 'No matching sample booking.';
+            status.textContent = found
+                ? form.dataset.foundMessage ?? 'Sample booking found.'
+                : form.dataset.missingMessage ?? 'No matching sample booking.';
             return;
         }
         status.textContent = 'Preview complete. Your information was not sent or saved.';

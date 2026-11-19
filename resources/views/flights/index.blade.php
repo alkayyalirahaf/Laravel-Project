@@ -22,6 +22,9 @@
 @section('title'){{ $title }}@endsection
 
 @section('content')
+@if(request()->query('trip') === 'multi-city')
+    @include('flights.multi-city')
+@else
 <h1>{{ $title }}</h1>
 <p class="notice">Sample schedules and fares for preview. Dates and party size will apply when live inventory is connected.</p>
 <x-travel-search :filters="$filters" />
@@ -33,7 +36,7 @@
 @endif
 <form action="{{ route('compare') }}" class="stack section" data-compare>
     @forelse($flights as $flight)
-        <x-flight-card :flight="$flight">
+        <x-flight-card :flight="$flight" :preferred-cabin="$filters['cabin'] ?? null">
             <label><input type="checkbox" name="flights[]" value="{{ $flight['id'] }}"> Compare <span class="sr-only">{{ $flight['number'] }}</span></label>
         </x-flight-card>
     @empty
@@ -41,4 +44,5 @@
     @endforelse
     @if($flights->isNotEmpty()) <div><button class="button">Compare selected flights</button> <span data-compare-status aria-live="polite">Select 2 or 3 flights.</span></div> @endif
 </form>
+@endif
 @endsection

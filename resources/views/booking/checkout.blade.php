@@ -6,6 +6,12 @@
     $flight = $demoFlights->firstWhere('id', (int) ($selection['flight'] ?? 0));
     $class = $selection['class'] ?? '';
     $fare = $flight['fares'][$class] ?? null;
+    $cabinRows = require resource_path('views/shared/demo-cabin.php');
+    $selectedSeat = request()->query('seat');
+    if (is_string($selectedSeat) && preg_match('/^(\d{2})([ACHK])$/D', $selectedSeat, $seatParts)
+        && ($cabinRows[(int) $seatParts[1]][$seatParts[2]] ?? false)) {
+        $selection['seat'] = $selectedSeat;
+    }
 @endphp
 
 @section('title'){{ $title }}@endsection
@@ -18,42 +24,36 @@
 </nav>
 <h1>{{ $title }}</h1>
 <p class="notice">Booking preview. Do not enter real passport or payment details.</p>
+@unless($step === 'passengers')
 @if($flight)
     <p>{{ $flight['number'] }} · {{ $flight['from'] }} → {{ $flight['to'] }} @if($fare) · {{ ucfirst($class) }} · JOD {{ $fare[0] }} @endif</p>
 @else
     <p>Choose a flight and fare to see sample trip details. <a href="{{ route('flights.search') }}">Find flights</a></p>
 @endif
+@endunless
 @switch($step)
     @case('passengers')
-        <section class="panel">
-            <h2>Traveler and contact details</h2>
-            <p>Passenger submission and passport scanning are currently unavailable.</p>
-            <fieldset class="form-grid" disabled>
-                <legend>Passenger 1</legend>
-                <x-travel-field name="first_name" label="First name" value="Sample" />
-                <x-travel-field name="last_name" label="Last name" value="Traveler" />
-                <x-travel-field name="date_of_birth" label="Date of birth" type="date" />
-                <x-travel-field name="nationality" label="Nationality" />
-                <x-travel-field name="passport_number" label="Passport number" />
-                <x-travel-field name="passport_country" label="Passport country" />
-                <x-travel-field name="passport_expiry" label="Passport expiry" type="date" />
-                <x-travel-field name="contact_email" label="Contact email" type="email" />
-                <x-travel-field name="contact_phone" label="Contact phone" type="tel" />
-            </fieldset>
-            <a class="button section" href="{{ route('book.seats', $selection) }}">Preview seat selection</a>
-        </section>
+        @include('booking.passengers')
         @break
     @case('seats')
         <section class="panel">
             <h2>Choose a sample seat</h2>
             <p>Seat selection is local to this preview. Live holds are unavailable.</p>
-            <x-seat-map interactive />
-            <a class="button section" href="{{ route('book.review', $selection) }}">Review sample trip</a>
+            <form method="GET" action="{{ route('book.review') }}">
+                @foreach(\Illuminate\Support\Arr::except($selection, 'seat') as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endforeach
+                <x-booking-seat-map :rows="$cabinRows" :selected="$selection['seat'] ?? null" />
+                <button class="button section">Review sample trip</button>
+            </form>
         </section>
         @break
     @case('review')
         <section class="panel">
             <h2>Trip summary</h2>
+            @isset($selection['seat'])
+                <p>Selected seat <strong>{{ $selection['seat'] }}</strong></p>
+            @endisset
             <p>{{ $flight ? 'Departs at '.$flight['departure'] : 'Choose a flight to see trip details.' }}</p>
             <p>{{ $fare ? 'Base fare per traveler: JOD '.$fare[0] : 'Choose a fare to see the base price.' }}</p>
             <p>Final taxes, credits, passenger details, and cancellation terms appear when checkout is available.</p>
