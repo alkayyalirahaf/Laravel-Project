@@ -1,14 +1,22 @@
 <?php
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\Auth\AirlineAdminSessionController;
+use App\Http\Controllers\Auth\CustomerSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Customer\CreditWalletController;
+use App\Http\Controllers\PublicSite\ContactMessageController;
+use App\Http\Controllers\PublicSite\HomeController;
+use App\Http\Controllers\SuperAdmin\AirportController;
 use App\Http\Middleware\SetLandingLocale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->middleware(SetLandingLocale::class)->name('home');
+Route::get('/', [HomeController::class, 'index'])->middleware(SetLandingLocale::class)->name('home');
 
 Route::post('/language/{locale}', function (Request $request, string $locale) {
     $request->session()->put('landing_locale', $locale);
+
     return redirect()->route('home');
 })->whereIn('locale', ['en', 'ar'])->name('home.language');
 Route::view('/flights', 'flights.index', ['title' => 'Search Results'])->name('flights.search');
@@ -19,17 +27,25 @@ Route::redirect('/destinations/{country}', '/destinations');
 Route::view('/booking-lookup', 'booking.lookup', ['title' => 'Booking Lookup'])->name('booking.lookup');
 Route::view('/assistant', 'pages.assistant', ['title' => 'AI Assistant'])->name('assistant');
 
-Route::view('/login', 'auth.login', ['title' => 'Login'])->name('login');
-Route::view('/register', 'auth.register', ['title' => 'Register'])->name('register');
+Route::get('/login', [CustomerSessionController::class, 'create'])->name('login');
+Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+Route::post('/login', [CustomerSessionController::class, 'store'])->middleware('throttle:auth-login')->name('login.store');
+Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
+Route::post('/logout', [CustomerSessionController::class, 'destroy'])->middleware('auth')->name('logout');
 
 foreach (['about' => 'About Us', 'faq' => 'FAQ', 'terms' => 'Terms and Conditions', 'privacy' => 'Privacy Policy', 'contact' => 'Contact and Suggestions'] as $page => $title) {
     Route::view("/$page", 'pages.information', compact('page', 'title'))->name($page);
 }
+Route::post('/contact', [ContactMessageController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 
 $steps = ['passengers' => 'Passengers', 'seats' => 'Seat Selection', 'review' => 'Review', 'payment' => 'Payment', 'confirmation' => 'Confirmation'];
-foreach ($steps as $step => $title) Route::view("/book/$step", 'booking.checkout', compact('step', 'steps', 'title'))->name("book.$step");
+foreach ($steps as $step => $title) {
+    Route::view("/book/$step", 'booking.checkout', compact('step', 'steps', 'title'))
+        ->middleware('role.customer')
+        ->name("book.$step");
+}
 
-Route::prefix('my')->name('my.')->group(function () {
+Route::prefix('my')->name('my.')->middleware('role.customer')->group(function () {
     foreach ([
         'bookings' => ['/bookings', 'My Bookings'],
         'booking' => ['/bookings/{code}', 'Booking Details'],
@@ -37,7 +53,11 @@ Route::prefix('my')->name('my.')->group(function () {
         'credits' => ['/credits', 'Credits Wallet'],
         'profile' => ['/profile', 'Profile'],
     ] as $screen => [$path, $title]) {
-        Route::view($path, 'customer.account', compact('screen', 'title'))->name($screen);
+        if ($screen === 'credits') {
+            Route::get($path, [CreditWalletController::class, 'index'])->name($screen);
+        } else {
+            Route::view($path, 'customer.account', compact('screen', 'title'))->name($screen);
+        }
     }
 });
 
@@ -74,18 +94,35 @@ $staff = [
 
 foreach ($staff as $area => $navigation) {
     $folder = $area === 'admin' ? 'super-admin' : 'airline-admin';
-    $staffTitle = $area === 'admin' ? 'Admin Login' : 'Airline Admin Login';
-    Route::prefix($area)->name("$area.")->group(function () use ($area, $folder, $navigation, $staffTitle) {
+    $roleMiddleware = $area === 'admin' ? 'role.super-admin' : 'role.airline-admin';
+
+    Route::prefix($area)->name("$area.")->group(function () use ($area, $folder, $navigation, $roleMiddleware) {
         if ($area === 'admin') {
             Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
             Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
         } else {
-            Route::view('/login', "$folder.login", ['title' => $staffTitle])->name('login');
+            Route::get('/login', [AirlineAdminSessionController::class, 'create'])->name('login');
+            Route::post('/login', [AirlineAdminSessionController::class, 'store'])->middleware('throttle:auth-login')->name('login.submit');
         }
-        foreach ($navigation as $screen => $definition) {
-            [$path, $title] = $definition;
-            $columns = $definition[2] ?? [];
-            Route::view($path, "$folder.panel", compact('area', 'screen', 'title', 'columns', 'navigation'))->whereNumber('id')->name($screen);
-        }
+
+        Route::middleware($roleMiddleware)->group(function () use ($area, $folder, $navigation) {
+            foreach ($navigation as $screen => $definition) {
+                [$path, $title] = $definition;
+                $columns = $definition[2] ?? [];
+
+                if ($area === 'admin' && $screen === 'airports') {
+                    Route::get($path, [AirportController::class, 'index'])->name('airports');
+                    Route::get($path.'/create', [AirportController::class, 'create'])->name('airports.create');
+                    Route::post($path, [AirportController::class, 'store'])->name('airports.store');
+                    Route::get($path.'/{airport}/edit', [AirportController::class, 'edit'])->name('airports.edit');
+                    Route::put($path.'/{airport}', [AirportController::class, 'update'])->name('airports.update');
+                    Route::delete($path.'/{airport}', [AirportController::class, 'destroy'])->name('airports.destroy');
+
+                    continue;
+                }
+
+                Route::view($path, "$folder.panel", compact('area', 'screen', 'title', 'columns', 'navigation'))->whereNumber('id')->name($screen);
+            }
+        });
     });
 }

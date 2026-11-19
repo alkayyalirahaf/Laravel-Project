@@ -29,13 +29,36 @@
             <article class="panel"><h2>Account and support information</h2><p>Account details support sign-in and booking access. Contact form submissions are stored for staff to respond to your request.</p><h2>Passport data and AI</h2><p>Passport scanning and AI chat are currently unavailable. Keep passport numbers and payment details out of support messages.</p></article>
             @break
         @case('contact')
-            <form method="POST" data-preview-form class="panel stack">
-                <p class="notice">Preview only. Use sample information. Submission is unavailable.</p>
-                <x-travel-field name="name" label="Name" required />
-                <x-travel-field name="email" label="Email" type="email" required />
-                <x-travel-field name="type" label="Topic" :options="['question' => 'Question', 'suggestion' => 'Suggestion', 'complaint' => 'Complaint']" required />
-                <x-travel-field name="message" label="Message" type="textarea" maxlength="5000" required />
-                <button class="button" disabled>Preview Send message</button><p data-preview-status role="status"></p>
+            <form action="{{ route('contact.store') }}" method="POST" class="panel stack">
+                @csrf
+                @if(session('status'))
+                    <p class="notice" role="status">{{ session('status') }}</p>
+                @endif
+                <label class="field">
+                    <span>Name</span>
+                    <input name="name" value="{{ old('name') }}" maxlength="150" required>
+                    @error('name')<small class="error">{{ $message }}</small>@enderror
+                </label>
+                <label class="field">
+                    <span>Email</span>
+                    <input name="email" type="email" value="{{ old('email') }}" maxlength="255" required>
+                    @error('email')<small class="error">{{ $message }}</small>@enderror
+                </label>
+                <label class="field">
+                    <span>Topic</span>
+                    <select name="type" required>
+                        <option value="question" @selected(old('type') === 'question')>Question</option>
+                        <option value="suggestion" @selected(old('type') === 'suggestion')>Suggestion</option>
+                        <option value="complaint" @selected(old('type') === 'complaint')>Complaint</option>
+                    </select>
+                    @error('type')<small class="error">{{ $message }}</small>@enderror
+                </label>
+                <label class="field">
+                    <span>Message</span>
+                    <textarea name="message" maxlength="5000" required>{{ old('message') }}</textarea>
+                    @error('message')<small class="error">{{ $message }}</small>@enderror
+                </label>
+                <button class="button" type="submit">Send message</button>
             </form>
             @break
     @endswitch

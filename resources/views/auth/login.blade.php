@@ -5,11 +5,11 @@
 @section('content')
 <div class="narrow">
     <h1>{{ $title }}</h1>
-    <form method="POST" data-preview-form class="panel stack">
-        <p class="notice">Preview only. Use sample information. Submission is unavailable.</p>
+    <form action="{{ $action }}" method="POST" class="panel stack">
+        @csrf
         <x-travel-field name="email" label="Email" type="email" autocomplete="username" required />
-        <x-travel-field name="password" label="Password" type="password" disabled autocomplete="current-password" required />
-        <button class="button" disabled>Preview Sign in</button><p data-preview-status role="status"></p>
+        <x-travel-field name="password" label="Password" type="password" autocomplete="current-password" required />
+        <button class="button" type="submit">Sign in</button>
     </form>
     @if(request()->routeIs('login'))
         <div class="actions section">
