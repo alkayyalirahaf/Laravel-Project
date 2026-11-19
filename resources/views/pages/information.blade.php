@@ -16,7 +16,7 @@
                     'Where can I see baggage allowances?' => 'Open Flight details and review the baggage allowance for the cabin you are considering.',
                     'How do cancellation and credits work?' => 'Cancellation eligibility and credits depend on your fare. Use Contact if you need help with an existing booking.',
                     'How do I select a seat?' => 'Seat selection appears after traveler details. Availability depends on the aircraft and cabin.',
-                    'Can I pay online?' => 'Online payment is currently unavailable.',
+                    'Can I pay online?' => 'Yes. Payments are processed through Stripe Checkout. Enter your card details on Stripe’s secure page; Yalla Teer does not store them.',
                 ] as $question => $answer)
                     <details class="panel"><summary>{{ $question }}</summary><p>{{ $answer }}</p></details>
                 @endforeach

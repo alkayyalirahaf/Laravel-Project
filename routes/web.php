@@ -5,9 +5,11 @@ use App\Http\Controllers\Auth\AirlineAdminSessionController;
 use App\Http\Controllers\Auth\CustomerSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Customer\CreditWalletController;
+use App\Http\Controllers\Customer\PaymentController;
 use App\Http\Controllers\PublicSite\ContactMessageController;
 use App\Http\Controllers\PublicSite\HomeController;
 use App\Http\Controllers\SuperAdmin\AirportController;
+use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Middleware\SetLandingLocale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -40,10 +42,25 @@ Route::post('/contact', [ContactMessageController::class, 'store'])->middleware(
 
 $steps = ['passengers' => 'Passengers', 'seats' => 'Seat Selection', 'review' => 'Review', 'payment' => 'Payment', 'confirmation' => 'Confirmation'];
 foreach ($steps as $step => $title) {
-    Route::view("/book/$step", 'booking.checkout', compact('step', 'steps', 'title'))
-        ->middleware('role.customer')
-        ->name("book.$step");
+    if ($step === 'payment') {
+        Route::get("/book/$step", [PaymentController::class, 'show'])
+            ->middleware('role.customer')
+            ->name("book.$step");
+        Route::post('/book/payment/intent', [PaymentController::class, 'intent'])
+            ->middleware('role.customer')
+            ->name('book.payment.intent');
+    } else {
+        Route::view("/book/$step", 'booking.checkout', compact('step', 'steps', 'title'))
+            ->middleware('role.customer')
+            ->name("book.$step");
+    }
 }
+
+Route::get('/book/payment/return', [PaymentController::class, 'return'])
+    ->middleware('role.customer')
+    ->name('book.payment.return');
+
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
 Route::prefix('my')->name('my.')->middleware('role.customer')->group(function () {
     foreach ([
