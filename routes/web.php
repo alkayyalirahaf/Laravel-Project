@@ -14,6 +14,7 @@ use App\Http\Controllers\PublicSite\HomeController;
 use App\Http\Controllers\PublicSite\InformationController;
 use App\Http\Controllers\PublicFlightController;
 use App\Http\Controllers\SuperAdmin\AirportController;
+use App\Http\Controllers\SuperAdmin\CityController;
 use App\Http\Controllers\SuperAdmin\CountryController;
 use App\Http\Controllers\SuperAdmin\CreditController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
@@ -160,7 +161,7 @@ $registerPanelRoutes = function (string $area, string $view, array $navigation) 
     $middleware = $area === 'admin' ? 'role.super-admin' : 'role.airline-admin';
     Route::middleware($middleware)->group(function () use ($area, $view, $navigation) {
         foreach ($navigation as $screen => $page) {
-            if ($area === 'admin' && in_array($screen, ['dashboard', 'countries', 'airports', 'credits'], true)) {
+            if ($area === 'admin' && in_array($screen, ['dashboard', 'countries', 'cities', 'airports', 'credits'], true)) {
                 continue;
             }
             [$path, $title] = $page;
@@ -185,6 +186,8 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/credits', [CreditController::class, 'index'])->name('credits');
     Route::post('/credits/{customer}', [CreditController::class, 'update'])->whereNumber('customer')->name('credits.update');
+
+    Route::resource('cities', CityController::class)->except('show')->names(['index' => 'cities']);
 
     Route::get('/airports', [AirportController::class, 'index'])->name('airports');
     Route::get('/airports/create', [AirportController::class, 'create'])->name('airports.create');
