@@ -7,5 +7,5 @@ use Illuminate\Support\Facades\Auth;
 
 class SuperAdminSessionController
 {
-
+  
 }
