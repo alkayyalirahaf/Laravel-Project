@@ -1,30 +1,41 @@
-@props(['rows', 'selected' => null])
+@props(['rows', 'selected' => null, 'name' => 'seat', 'seatIds' => [], 'caption' => 'Select an available seat'])
+
+@php
+    $letters = collect($rows)->flatMap(fn ($seats) => array_keys($seats))->unique()->sort(SORT_NATURAL)->values()->all();
+    $columns = $letters;
+    if (count($columns) > 1) {
+        array_splice($columns, (int) ceil(count($columns) / 2), 0, ['']);
+    }
+@endphp
 
 <div class="table-wrap booking-cabin">
+    <div class="booking-cabin-shell">
+    <div class="booking-cabin-end booking-cabin-front">Front of aircraft</div>
     <table>
-        <caption>Sample cabin · Select an available seat</caption>
+        <caption>{{ $caption }}</caption>
         <thead>
             <tr>
                 <th scope="col"><span class="sr-only">Row</span></th>
-                @foreach(['A', 'C', '', 'H', 'K'] as $column)
+                @foreach($columns as $column)
                     <th scope="col">@if($column){{ $column }}@else<span class="sr-only">Aisle</span>@endif</th>
                 @endforeach
-                <td></td>
+                <td aria-hidden="true"></td>
             </tr>
         </thead>
         <tbody>
             @foreach($rows as $row => $seats)
                 <tr>
                     <th class="booking-cabin-edge" scope="row">{{ $row }}</th>
-                    @foreach(['A', 'C', '', 'H', 'K'] as $column)
+                    @foreach($columns as $column)
                         <td @class(['booking-cabin-aisle' => !$column])>
                             @if(isset($seats[$column]))
                                 @php($seat = $row.$column)
-                                <label class="booking-seat">
-                                    <input class="sr-only" type="radio" name="seat" value="{{ $seat }}"
-                                        @checked($selected === $seat) @disabled(!$seats[$column]) @required($seats[$column])
+                                @php($value = $seatIds[$seat] ?? $seat)
+                                <label class="booking-seat" title="Seat {{ $seat }}">
+                                    <input class="sr-only" type="radio" name="{{ $name }}" value="{{ $value }}" data-seat-label="{{ $seat }}"
+                                        @checked((string) $selected === (string) $value) @disabled(!$seats[$column]) @required($seats[$column])
                                         aria-label="{{ 'Seat '.$seat.($seats[$column] ? '' : ', unavailable') }}">
-                                    <span aria-hidden="true">@if(!$seats[$column])&times;@endif</span>
+                                    <span aria-hidden="true">{{ $seats[$column] ? $seat : "×" }}</span>
                                 </label>
                             @endif
                         </td>
@@ -33,10 +44,9 @@
                 </tr>
             @endforeach
         </tbody>
-        <tfoot aria-hidden="true">
-            <tr><td></td><td>A</td><td>C</td><td></td><td>H</td><td>K</td><td></td></tr>
-        </tfoot>
     </table>
+    <div class="booking-cabin-end booking-cabin-rear">Rear of aircraft</div>
+    </div>
     <div class="booking-cabin-legend">
         <span>Available</span><span>Selected</span><span>Unavailable</span>
     </div>

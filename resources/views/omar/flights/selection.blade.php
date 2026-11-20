@@ -10,5 +10,6 @@
             @if($selection[$key])<tr><td>{{ $label }}</td><td><a href="{{ route('flights.show', $selection[$key]['flight_id']) }}">Flight #{{ $selection[$key]['flight_id'] }}</a></td><td>{{ $selection[$key]['price'] }}</td></tr>@endif
         @endforeach
     </tbody></table>
+    <a class="btn btn-primary" href="{{ route('book.passengers') }}">Continue to passengers</a>
     <a class="btn btn-secondary" href="{{ route('flights.search') }}">Search again</a>
 @endsection

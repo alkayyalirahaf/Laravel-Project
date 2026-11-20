@@ -30,7 +30,7 @@ class PublicFlightController
         $flight = $search->availableFlights()->with([
             'airline', 'originAirport.city', 'destinationAirport.city',
             'flightClasses' => fn ($query) => $query->withCount([
-                'seats as available_seats_count' => fn ($seats) => $seats->where('status', 'available'),
+                'seats as available_seats_count' => fn ($seats) => $seats->availableForBooking(),
             ])->orderBy('price'),
         ])->findOrFail($flight);
 

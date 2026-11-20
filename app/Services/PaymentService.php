@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session as CheckoutSession;
@@ -108,6 +109,16 @@ class PaymentService
             $booking = Booking::query()->lockForUpdate()->findOrFail($booking->getKey());
             abort_unless((int) $booking->customer_id === (int) $customer->getKey(), 404);
             abort_unless($booking->status === 'pending', 409, 'This booking is not awaiting payment.');
+
+            if (str_starts_with($booking->code, 'YTB')) {
+                abort_if($booking->payments()->where('status', 'succeeded')->exists(), 409, 'Payment is already recorded.');
+                abort_unless(Cache::store('database')->has(BookingFinalizationService::holdKey($booking)), 409, 'The seat hold expired.');
+                abort_if($booking->bookingFlights()->whereHas('flight', fn ($query) => $query
+                    ->where(fn ($flight) => $flight->where('departure_at', '<=', now())
+                        ->orWhereNotIn('status', ['scheduled', 'delayed'])
+                        ->orWhereHas('airline', fn ($airline) => $airline->where('status', '!=', 'active'))))->exists(),
+                    409, 'The itinerary is no longer available.');
+            }
 
             $booking = $this->applyCreditsHook($booking, $customer);
             abort_unless((int) $booking->customer_id === (int) $customer->getKey(), 404);
@@ -232,7 +243,7 @@ class PaymentService
                 return false;
             }
 
-            if ($booking->status !== 'pending') {
+            if ($booking->status !== 'pending' && !($booking->status === 'cancelled' && str_starts_with($booking->code, 'YTB'))) {
                 return false;
             }
 
@@ -264,6 +275,10 @@ class PaymentService
             $payment->paid_at = now();
             $payment->receipt_number ??= 'YT-'.strtoupper(bin2hex(random_bytes(12)));
             $payment->save();
+
+            if ($booking->status === 'cancelled') {
+                Log::warning('Payment received for a cancelled booking. Refund review is required.', ['booking_id' => $booking->id]);
+            }
 
             $this->finalizeBookingHook($booking);
 
@@ -338,6 +353,8 @@ class PaymentService
 
         $secret = (string) config('services.stripe.secret');
         abort_if($secret === '', 503, 'Stripe is not configured.');
+
+        abort_unless(class_exists(StripeClient::class), 503, 'Stripe SDK is not installed.');
 
         return new StripeClient($secret);
     }
