@@ -17,12 +17,13 @@ class PublicFlightController
         if ($request->hasAny(['from', 'to', 'origin_city_id', 'destination_city_id', 'depart', 'trip', 'legs'])) {
             $filters = $search->validateFilters($request->query());
             $flights = $search->search($filters);
+            $request->session()->put('dev3.search_filters', $filters);
         }
 
         $airports = Airport::with('city')->orderBy('code')->get();
         $cities = City::orderBy('name')->get();
 
-        return view('omar.flights.index', compact('filters', 'flights', 'airports', 'cities'));
+        return view('flights.index', compact('filters', 'flights', 'airports', 'cities'));
     }
 
     public function show(int $flight, FlightSearchService $search)
@@ -34,7 +35,7 @@ class PublicFlightController
             ])->orderBy('price'),
         ])->findOrFail($flight);
 
-        return view('omar.flights.show', compact('flight'));
+        return view('flights.show', compact('flight'));
     }
 
     public function select(Request $request, SearchSelectionService $selection, FlightSearchService $search)
@@ -42,6 +43,6 @@ class PublicFlightController
         $selection = $selection->select($request->all(), $search);
         $request->session()->put('dev3.search_selection', $selection);
 
-        return view('omar.flights.selection', compact('selection'));
+        return view('flights.selection', compact('selection'));
     }
 }

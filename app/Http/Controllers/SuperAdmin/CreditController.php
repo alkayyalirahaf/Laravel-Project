@@ -25,7 +25,7 @@ class CreditController
                 ->where(fn ($user) => $user->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%'))))
             ->latest('id')->paginate(20, ['*'], 'history_page')->withQueryString();
 
-        return view('omar.admin.credits', compact('customers', 'transactions', 'search'));
+        return view('super-admin.panel', array_merge(compact('customers', 'transactions', 'search'), ['area' => 'admin', 'screen' => 'credits', 'title' => 'Customer credits']));
     }
 
     public function update(Request $request, Customer $customer, CreditService $credits)
@@ -38,16 +38,12 @@ class CreditController
             'operation_id' => ['required', 'uuid'],
         ]);
 
-        try {
-            $actor = $request->user()->id;
-            match ($data['action']) {
-                'add' => $credits->addCredits($customer->id, (string) $data['amount'], $data['operation_id'], $data['reason'], $actor),
-                'deduct' => $credits->deductCredits($customer->id, (string) $data['amount'], $data['operation_id'], $data['reason'], $actor),
-                'adjust' => $credits->adjustBalance($customer->id, (string) $data['amount'], $data['operation_id'], $data['reason'], $actor),
-            };
-        } catch (\LogicException $exception) {
-            return response()->view('omar.admin.credits-blocked', ['message' => CreditService::BLOCKED], 503);
-        }
+        $actor = $request->user()->id;
+        match ($data['action']) {
+            'add' => $credits->addCredits($customer->id, (string) $data['amount'], $data['operation_id'], $data['reason'], $actor),
+            'deduct' => $credits->deductCredits($customer->id, (string) $data['amount'], $data['operation_id'], $data['reason'], $actor),
+            'adjust' => $credits->adjustBalance($customer->id, (string) $data['amount'], $data['operation_id'], $data['reason'], $actor),
+        };
 
         return redirect()->route('admin.credits')->with('status', 'Credit balance updated.');
     }

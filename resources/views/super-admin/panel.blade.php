@@ -2,6 +2,12 @@
 
 @section('admin-title', $title)
 @section('admin-content')
+    @if(($screen ?? '') === 'dashboard')
+        @include('super-admin.dashboard.content')
+    @elseif(($screen ?? '') === 'credits')
+        <h1>{{ $title }}</h1>
+        @include('super-admin.credits.content')
+    @else
     <div class="admin-page-heading">
         <p class="eyebrow mb-2">Platform administration</p>
         <h1>{{ $title }}</h1>
@@ -19,4 +25,5 @@
             </tbody>
         </table>
     </div>
+    @endif
 @endsection

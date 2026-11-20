@@ -14,6 +14,10 @@ class CreditTransaction extends Model
         'amount',
         'balance_after',
         'note',
+        'operation_id',
+        'actor_user_id',
+        'operation_action',
+        'requested_amount',
     ];
 
     protected function casts(): array
@@ -21,6 +25,7 @@ class CreditTransaction extends Model
         return [
             'amount' => 'decimal:2',
             'balance_after' => 'decimal:2',
+            'requested_amount' => 'decimal:2',
         ];
     }
 
