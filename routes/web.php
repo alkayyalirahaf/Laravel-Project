@@ -106,10 +106,7 @@ Route::prefix('my')->name('my.')->middleware('role.customer')->group(function ()
     Route::get('/bookings/{code}', [CustomerBookingController::class, 'show'])->name('booking');
     Route::post('/bookings/{code}/cancel', [CustomerBookingController::class, 'cancel'])->name('booking.cancel');
 
-    Route::view('/bookings/{code}/review', 'customer.account', [
-        'screen' => 'review',
-        'title' => 'Write a Review',
-    ])->name('review');
+    Route::get('/bookings/{code}/review', [ReviewController::class, 'forBooking'])->name('review');
 
     Route::get('/credits', [CreditWalletController::class, 'index'])->name('credits');
 
@@ -256,8 +253,3 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::get('/messages', [AdminContactMessageController::class, 'index'])->name('messages');
     Route::patch('/messages/{message}/handled', [AdminContactMessageController::class, 'markHandled'])->name('messages.handled');
 });
-
-
-
-
-

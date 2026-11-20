@@ -1,8 +1,8 @@
 @extends('super-admin.countries.layout')
 
 @section('countries-content')
-    <a class="btn btn-primary mb-3" href="{{ route('admin.countries.create') }}">Create country</a>
-    <div class="table-responsive">
+    <a class="button mb-3" href="{{ route('admin.countries.create') }}">Create country</a>
+    <div class="table-wrap panel section">
         <table class="table table-striped align-middle">
             <thead>
                 <tr><th>Name</th><th>Code</th><th>Currency</th><th>Language</th><th>Local apps</th><th>Actions</th></tr>
@@ -16,12 +16,12 @@
                         <td>{{ $country->language }}</td>
                         <td class="text-break">{{ $country->local_apps ?: '—' }}</td>
                         <td>
-                            <a class="btn btn-outline-primary btn-sm" href="{{ route('admin.countries.edit', $country) }}">Edit</a>
+                            <a class="button secondary " href="{{ route('admin.countries.edit', $country) }}">Edit</a>
                             @if($country->cities_count === 0)
-                                <form class="d-inline" method="POST" action="{{ route('admin.countries.destroy', $country) }}">
+                                <form class="inline-form" method="POST" action="{{ route('admin.countries.destroy', $country) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-outline-danger btn-sm" type="submit">Delete {{ $country->name }}</button>
+                                    <button class="button secondary" type="submit">Delete {{ $country->name }}</button>
                                 </form>
                             @else
                                 <span class="text-muted">Has cities; cannot delete</span>
@@ -34,5 +34,5 @@
             </tbody>
         </table>
     </div>
-    {{ $countries->links('pagination::bootstrap-5') }}
+    {{ $countries->links() }}
 @endsection

@@ -23,7 +23,7 @@ if (menu && navigation) {
 }
 
 document.querySelectorAll('[data-compare]').forEach((form) => {
-    const choices = [...form.querySelectorAll('input[type="checkbox"]')];
+    const choices = [...form.elements].filter((field) => field.type === 'checkbox');
     const status = form.querySelector('[data-compare-status]');
 
     if (!status) return;
@@ -36,7 +36,7 @@ document.querySelectorAll('[data-compare]').forEach((form) => {
         }
     };
 
-    form.addEventListener('change', update);
+    choices.forEach((choice) => choice.addEventListener('change', update));
     form.addEventListener('submit', (event) => {
         if (choices.filter((choice) => choice.checked).length < 2) {
             event.preventDefault();

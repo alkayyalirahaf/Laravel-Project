@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './landing.css';
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 :root {
@@ -213,3 +214,8 @@ summary { cursor: pointer; }
 .booking-cabin-rear {border-top:1px solid #51432e}
 .booking-cabin-shell .booking-seat span {font-size:.72rem;font-weight:700}
 .booking-cabin-shell .booking-seat input + span::before {content:none}
+.search-refinements { display:flex; flex-wrap:wrap; align-items:end; gap:1rem; margin-block:1.5rem; }
+.search-refinements .field { flex:1 1 12rem; }
+.input-control { display:block; width:100%; min-height:2.75rem; padding:.65rem; margin-block:.35rem .8rem; background:#100f0d; color:var(--text); border:1px solid #655946; border-radius:.45rem; }
+.form-label { display:block; margin-top:.75rem; }
+.inline-form { display:inline; }

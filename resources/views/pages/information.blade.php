@@ -10,20 +10,28 @@
             <article class="panel"><h2>Our mission</h2><p>Yalla Teer brings flight search, fare comparison, and destination information together so travelers can make informed choices.</p><h2>Our team</h2><p>Our team builds tools for travelers, airline partners, and platform staff.</p></article>
             @break
         @case('faq')
-            <div class="stack">
-                @foreach([
-                    'Where can I find my booking?' => 'Use Booking lookup with your booking code and the last name of a passenger.',
-                    'Where can I see baggage allowances?' => 'Open Flight details and review the baggage allowance for the cabin you are considering.',
-                    'How do cancellation and credits work?' => 'Cancellation eligibility and credits depend on your fare. Use Contact if you need help with an existing booking.',
-                    'How do I select a seat?' => 'Seat selection appears after traveler details. Availability depends on the aircraft and cabin.',
-                    'Can I pay online?' => 'Yes. Payments are processed through Stripe Checkout. Enter your card details on Stripe’s secure page; Yalla Teer does not store them.',
-                ] as $question => $answer)
-                    <details class="panel"><summary>{{ $question }}</summary><p>{{ $answer }}</p></details>
-                @endforeach
-            </div>
+@foreach([
+        'How do I search for a flight?' => 'Choose departure and arrival airports or cities, a travel date and the seats needed. You can filter by cabin and base fare and sort the results.',
+        'How do I search for a round trip?' => 'Choose round trip and enter both dates. Select an outbound cabin, then select a return cabin from the matching results.',
+        'Does selecting a flight reserve a seat?' => 'Search selection does not reserve seats. Availability and prices must be confirmed by the booking process.',
+        'Where can I see baggage information?' => 'Flight details and comparison show the cabin and checked baggage weights recorded for each cabin.',
+        'How many flights can I compare?' => 'Select two or three different flights in the search results.',
+        'When can I submit a review?' => 'You can review a flight segment belonging to your own completed booking after that flight has completed. Each segment can be reviewed once.',
+        'What are the cancellation and refund rules?' => 'Approved cancellation, refund and credit policies have not been supplied for publication. Contact the platform team for the applicable terms before booking.',
+    ] as $question => $answer)
+        <details class="panel mb-3"><summary>{{ $question }}</summary><p class="mt-2 mb-0">{{ $answer }}</p></details>
+    @endforeach
             @break
         @case('terms')
-            <article class="panel"><h2>Flight information</h2><p>Airline schedules and fares can change. Confirm your itinerary, baggage allowances, and fare conditions before traveling.</p><h2>Booking support</h2><p>Use the contact form if you need help with an existing reservation.</p><p>Full platform terms are pending publication.</p></article>
+<article class="panel">
+        <p class="notice">Full terms are awaiting approval and publication by the platform team.</p>
+        <h2 class="h4">Flight information</h2>
+        <p>Search results display recorded schedules, base fares, cabin baggage allowances and currently available seat counts. Selecting flights does not create a booking or guarantee a price.</p>
+        <h2 class="h4">Booking, cancellation, refunds and credits</h2>
+        <p>The team has not supplied approved policies for these services. This page does not establish cancellation deadlines, refund amounts, credit expiry rules or fees. Request the applicable terms before completing a booking.</p>
+        <h2 class="h4">Travel tips</h2>
+        <p>Assistant travel tips are general information. Confirm travel requirements and your itinerary with the relevant authorities and airline.</p>
+    </article>
             @break
         @case('privacy')
             <article class="panel stack">

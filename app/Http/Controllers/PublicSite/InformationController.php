@@ -6,11 +6,11 @@ class InformationController
 {
     public function faq()
     {
-        return view('omar.information.faq');
+        return view('pages.information', ['page' => 'faq', 'title' => 'Frequently asked questions']);
     }
 
     public function terms()
     {
-        return view('omar.information.terms');
+        return view('pages.information', ['page' => 'terms', 'title' => 'Terms and conditions']);
     }
 }

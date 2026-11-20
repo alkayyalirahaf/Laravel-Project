@@ -13,7 +13,7 @@
 
 @section('content')
 <h1>{{ $title }}</h1>
-<p class="notice">Sample account. Changes made here are for preview only.</p>
+@unless($screen === 'review')<p class="notice">Sample account. Changes made here are for preview only.</p>@endunless
 @switch($screen)
     @case('bookings')
         <nav class="subnav" aria-label="Booking status">
@@ -33,12 +33,14 @@
         </div>
         @break
     @case('review')
-        <form class="panel narrow stack" method="post" data-preview-form>
-            <h2>Amman → Dubai</h2>
+        <form class="panel narrow stack" method="POST" action="{{ route('my.reviews.store', $segment->id) }}">
+            @csrf
+            <h2>{{ $segment->flight->airline->name }} · {{ $segment->flight->flight_number }}</h2>
+            <p>Booking {{ $segment->booking->code }}</p>
             <x-travel-field name="rating" label="Rating" :options="[5 => '5 stars', 4 => '4 stars', 3 => '3 stars', 2 => '2 stars', 1 => '1 star']" required />
-            <x-travel-field name="comment" label="Comment" type="textarea" maxlength="4000" required />
-            <button class="button" disabled>Preview review</button>
-            <p data-preview-status role="status"></p>
+            <x-travel-field name="comment" label="Comment" type="textarea" maxlength="5000" required />
+            <p>Submitted reviews are hidden until moderation.</p>
+            <button class="button" type="submit">Submit review</button>
         </form>
         @break
     @case('credits')
