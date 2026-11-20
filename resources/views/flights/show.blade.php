@@ -3,6 +3,14 @@
 @section('title', 'Flight details')
 
 @section('content')
+@php
+    $fleetPhoto = match ($flight->airline->code) {
+        'RJ' => 'https://cdn.jetphotos.com/full/5/1193137_1776760492.jpg',
+        'EK' => 'https://www.aerotime.aero/images/2024/11/DXB1-32.jpg',
+        'TK' => 'https://w0.peakpx.com/wallpaper/547/707/HD-wallpaper-turkish-airlines-boeing-737-airbus-a321-turkish-airlines-logo-on-empennage-passenger-airplanes-red-tails-with-logo-airport-turkey-turkish-airlines-logo.jpg',
+        default => null,
+    };
+@endphp
 <h1>{{ $flight->flight_number }}</h1>
 <div class="panel">
     <span class="badge">{{ $flight->airline->name }} · {{ ucfirst($flight->status) }}</span>
@@ -10,6 +18,12 @@
     <p>{{ $flight->departure_at->format('Y-m-d H:i') }} → {{ $flight->arrival_at->format('Y-m-d H:i') }} · {{ (int) $flight->departure_at->diffInMinutes($flight->arrival_at) }} minutes</p>
     <p>Times use {{ config('app.timezone') }}. Prices are per-seat base fares.</p>
 </div>
+@if($fleetPhoto)
+    <figure class="flight-fleet-photo" data-airline-photo>
+        <img data-airline-image src="{{ $fleetPhoto }}" alt="{{ $flight->airline->name }} aircraft">
+        <figcaption>Fleet photo · {{ $flight->airline->name }}</figcaption>
+    </figure>
+@endif
 <section class="section">
     <h2>Available cabins</h2>
     <div class="cards">

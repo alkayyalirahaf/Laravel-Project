@@ -125,11 +125,12 @@ for (const button of promptButtons) {
     });
 }
 
-const cabinOptions = document.querySelector('.cabin-options');
-if (cabinOptions) {
+const cabinPreview = document.querySelector('#cabins');
+if (cabinPreview) {
+    const cabinOptions = cabinPreview.querySelector('.cabin-options');
     const showCabin = () => {
         const selected = cabinOptions.querySelector(':checked').value;
-        for (const figure of document.querySelectorAll('[data-cabin]')) {
+        for (const figure of cabinPreview.querySelectorAll('[data-cabin]')) {
             figure.hidden = figure.dataset.cabin !== selected;
         }
     };

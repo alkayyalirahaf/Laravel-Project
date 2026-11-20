@@ -3,44 +3,49 @@
 @section('title', 'Find flights')
 
 @section('content')
-<h1>Find flights</h1>
-    <x-landing-search />
+<div class="flight-search-page">
+    <h1 class="flight-search-title">Find flights</h1>
+    <div class="panel flight-search-panel">
+        <x-landing-search />
+    </div>
     @if($flights !== null)
+        <section class="panel flight-filter-panel" aria-labelledby="flight-filter-title">
+        <h2 id="flight-filter-title">Filter results</h2>
         <form method="GET" action="{{ route('flights.search') }}" class="search-refinements">
             @foreach($filters as $key => $value)
                 @if($value !== null && !in_array($key, ['sort', 'min_price', 'budget']))
                     <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                 @endif
             @endforeach
-            <x-travel-field name="min_price" label="Minimum fare" type="number" min="0" step="0.01" :value="$filters['min_price'] ?? null" />
-            <x-travel-field name="budget" label="Maximum fare" type="number" min="0" step="0.01" :value="$filters['budget'] ?? null" />
+            <x-travel-field name="min_price" label="Minimum fare (JOD)" type="number" min="0" step="0.01" :value="$filters['min_price'] ?? null" />
+            <x-travel-field name="budget" label="Maximum fare (JOD)" type="number" min="0" step="0.01" placeholder="No limit" :value="$filters['budget'] ?? null" />
             <x-travel-field name="sort" label="Sort flights" :value="$filters['sort']" :options="['departure_asc' => 'Earliest departure', 'departure_desc' => 'Latest departure', 'price_asc' => 'Lowest price', 'price_desc' => 'Highest price']" />
             <button class="button" type="submit">Apply filters</button>
         </form>
+        </section>
     @endif
     @if($flights !== null)
-        <h2>{{ $filters['leg'] === 'return' ? 'Return flights' : 'Outbound flights' }}</h2>
+        <header class="flight-results-heading">
+            <h2>{{ $filters['leg'] === 'return' ? 'Return flights' : 'Outbound flights' }}</h2>
+            <span>{{ trans_choice(':count flight|:count flights', $flights->total()) }}</span>
+        </header>
         @if(!isset($filters['adults']))
             <p class="notice">Choose the adult, youth and child counts in the search form and search again before selecting flights.</p>
         @endif
         @if($filters['leg'] === 'return')
-            <a href="{{ route('flights.search', array_diff_key(array_merge($filters, ['leg' => 'outbound']), ['outbound_class_id' => true])) }}">Change outbound selection</a>
+            <a class="button secondary flight-change-outbound" href="{{ route('flights.search', array_diff_key(array_merge($filters, ['leg' => 'outbound']), ['outbound_class_id' => true])) }}">← Change outbound selection</a>
         @endif
-        <form method="GET" action="{{ route('compare') }}" id="compare-flights" data-compare>
-            <p data-compare-status role="status">Select 2 or 3 flights.</p>
-        </form>
         <div class="stack section">
         @forelse($flights as $flight)
-            <article class="panel stack">
-                <x-flight-card :flight="$flight" :preferred-cabin="$filters['cabin'] ?? null">
-                    <label><input type="checkbox" name="flights[]" value="{{ $flight->id }}" form="compare-flights"> Compare this flight</label>
-                </x-flight-card>
+            <article class="panel flight-result">
+                <x-flight-card :flight="$flight" :preferred-cabin="$filters['cabin'] ?? null" :show-fare="false" />
                 @foreach($flight->flightClasses as $class)
-                    <div class="border-top pt-2 mt-2">
-                        <p>{{ ucfirst($class->class) }} — Base fare {{ $class->price }} — {{ $class->available_seats_count }} seats available</p>
+                    <div class="flight-result__fare">
+                        <p class="flight-fare-cabin"><strong>{{ ucfirst($class->class) }}</strong><span>{{ $class->available_seats_count }} seats available</span></p>
+                        <p class="flight-fare-price"><strong>JOD {{ $class->price }}</strong><span>per seat</span></p>
                         @if(isset($filters['adults']))
                         @if($filters['trip'] === 'round_trip' && $filters['leg'] === 'outbound')
-                            <a class="button secondary" href="{{ route('flights.search', array_merge($filters, ['leg' => 'return', 'outbound_class_id' => $class->id])) }}">Select outbound and find return</a>
+                            <a class="button" href="{{ route('flights.search', array_merge($filters, ['leg' => 'return', 'outbound_class_id' => $class->id])) }}">Select outbound and find return</a>
                         @else
                             <form method="POST" action="{{ route('flights.selection') }}">
                                 @csrf
@@ -55,12 +60,26 @@
                         @endif
                     </div>
                 @endforeach
+                @if($flights->count() > 1)
+                    <footer class="flight-result__footer">
+                        <label class="flight-compare-choice">
+                            <input type="checkbox" name="flights[]" value="{{ $flight->id }}" form="compare-flights">
+                            <span>Compare this flight</span>
+                        </label>
+                    </footer>
+                @endif
             </article>
         @empty
             <p class="notice">No available flights match this search.</p>
         @endforelse
         </div>
-        @if($flights->count())<button class="button secondary mb-3" form="compare-flights">Compare 2 or 3 flights</button>@endif
+        @if($flights->count() > 1)
+            <form method="GET" action="{{ route('compare') }}" id="compare-flights" class="panel flight-compare-bar" data-compare>
+                <p id="flight-compare-status" data-compare-status role="status">Select 2 or 3 flights.</p>
+                <button class="button" type="submit" aria-describedby="flight-compare-status">Compare 2 or 3 flights</button>
+            </form>
+        @endif
         {{ $flights->links() }}
     @endif
+</div>
 @endsection

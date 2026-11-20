@@ -27,6 +27,9 @@
                             <p style="margin:0 0 6px">Departure {{ $flight->departure_at->format('d M Y, H:i T') }}</p>
                             <p style="margin:0 0 6px">Cabin {{ ucfirst($leg->flightClass->class) }} · Seat {{ $ticket->seat?->seat_number ?? 'Unassigned' }}</p>
                             <p style="margin:0">Ticket number <strong>{{ $ticket->ticket_number }}</strong></p>
+                            <p style="margin:14px 0 0">
+                                <a href="{{ route('my.ticket', $ticket->ticket_number) }}" style="display:inline-block;padding:10px 14px;border-radius:6px;background:#201b15;color:#f8d790;text-decoration:none;font-weight:bold">View ticket</a>
+                            </p>
                         </td></tr>
                     @endforeach
                 </table>
