@@ -182,3 +182,5 @@ Route::get('/terms', [\App\Http\Controllers\PublicSite\InformationController::cl
 
 
 
+
+
