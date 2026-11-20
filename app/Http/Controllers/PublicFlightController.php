@@ -14,7 +14,7 @@ class PublicFlightController
     {
         $filters = [];
         $flights = null;
-        if ($request->hasAny(['from', 'to', 'origin_city_id', 'destination_city_id', 'depart'])) {
+        if ($request->hasAny(['from', 'to', 'origin_city_id', 'destination_city_id', 'depart', 'trip', 'legs'])) {
             $filters = $search->validateFilters($request->query());
             $flights = $search->search($filters);
         }

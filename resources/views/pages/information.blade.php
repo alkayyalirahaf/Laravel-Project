@@ -50,6 +50,7 @@
             </article>
             @break
         @case('contact')
+            @if(\Illuminate\Support\Facades\Route::has('contact.store'))
             <form action="{{ route('contact.store') }}" method="POST" class="panel stack">
                 @csrf
                 @if(session('status'))
@@ -81,6 +82,9 @@
                 </label>
                 <button class="button" type="submit">Send message</button>
             </form>
+            @else
+                <p class="notice" role="status">The contact form is temporarily unavailable. Please try again later.</p>
+            @endif
             @break
     @endswitch
 </div>
