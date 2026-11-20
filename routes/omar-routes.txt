@@ -1,9 +1,4 @@
-// REFERENCE ONLY. This text file is never loaded by Laravel.
-// The user explicitly authorized editing web.php on 2026-11-20. The routes and role
-// middleware below are now integrated there. DO NOT paste duplicate definitions.
-// Replacement/missing-route comments below describe the earlier merge review.
 
-// Countries CRUD — existing definitions; proposed role-middleware replacement.
 Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(function () {
     Route::get('/countries', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'index'])->name('countries');
     Route::get('/countries/create', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'create'])->name('countries.create');
@@ -13,64 +8,46 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::delete('/countries/{country}', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'destroy'])->whereNumber('country')->name('countries.destroy');
 });
 
-// Flight Search — already active. Retain one GET /flights definition only.
 Route::get('/flights', [\App\Http\Controllers\PublicSite\FlightController::class, 'index'])->name('flights.search');
 Route::post('/flights/selection', [\App\Http\Controllers\PublicSite\FlightController::class, 'select'])->name('flights.selection');
-// Flight Details — already active.
 Route::get('/flights/{flight}', [\App\Http\Controllers\PublicSite\FlightController::class, 'show'])->whereNumber('flight')->name('flights.show');
 
-// Compare Flights — already active.
 Route::get('/compare', [\App\Http\Controllers\PublicSite\CompareController::class, 'index'])->name('compare');
 
-// Admin Credits — replace existing middleware; balance changes remain BLOCKED.
 Route::get('/admin/credits', [\App\Http\Controllers\SuperAdmin\CreditController::class, 'index'])->middleware('role.super-admin')->name('admin.credits');
 Route::post('/admin/credits/{customer}', [\App\Http\Controllers\SuperAdmin\CreditController::class, 'update'])->whereNumber('customer')->middleware('role.super-admin')->name('admin.credits.update');
 
-// Reviews — replace existing middleware; keep booking-flight ID binding.
 Route::get('/my/booking-flights/{bookingFlight}/review', [\App\Http\Controllers\Customer\ReviewController::class, 'create'])->whereNumber('bookingFlight')->middleware('role.customer')->name('my.reviews.create');
 Route::post('/my/booking-flights/{bookingFlight}/review', [\App\Http\Controllers\Customer\ReviewController::class, 'store'])->whereNumber('bookingFlight')->middleware('role.customer')->name('my.reviews.store');
 
-// AI Assistant — replace existing middleware; provider remains unconfigured.
 Route::get('/assistant', [\App\Http\Controllers\Customer\AiConversationController::class, 'index'])->middleware('role.customer')->name('assistant');
 Route::get('/my/assistant', [\App\Http\Controllers\Customer\AiConversationController::class, 'index'])->middleware('role.customer')->name('my.assistant');
 Route::post('/my/assistant', [\App\Http\Controllers\Customer\AiConversationController::class, 'store'])->middleware(['role.customer', 'throttle:10,1'])->name('my.assistant.store');
 Route::get('/my/assistant/{conversation}', [\App\Http\Controllers\Customer\AiConversationController::class, 'show'])->whereNumber('conversation')->middleware('role.customer')->name('my.assistant.show');
 
-// Super Admin Dashboard — replace existing middleware.
 Route::get('/admin', [\App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])->middleware('role.super-admin')->name('admin.dashboard');
 
-// FAQ — already active.
 Route::get('/faq', [\App\Http\Controllers\PublicSite\InformationController::class, 'faq'])->name('faq');
-// Terms — already active; approved policies are still missing.
 Route::get('/terms', [\App\Http\Controllers\PublicSite\InformationController::class, 'terms'])->name('terms');
 
-// MERGE REPAIR: missing Dev 5 routes, for the route owner's manual integration.
-// Replace the existing GET /login and GET /register Route::view definitions.
 Route::get('/login', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'create'])->name('login');
 Route::post('/login', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'store'])->middleware('throttle:auth-login')->name('login.store');
 Route::get('/register', [\App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])->name('register');
 Route::post('/register', [\App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])->name('register.store');
 Route::post('/logout', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'destroy'])->middleware('auth')->name('logout');
 
-// Replace the existing airline.login GET preview. The POST route is missing.
 Route::get('/airline/login', [\App\Http\Controllers\Auth\AirlineAdminSessionController::class, 'create'])->name('airline.login');
 Route::post('/airline/login', [\App\Http\Controllers\Auth\AirlineAdminSessionController::class, 'store'])->middleware('throttle:auth-login')->name('airline.login.submit');
-// Keep the existing admin.login / admin.login.submit routes. Their actions now exist.
 
 Route::post('/contact', [\App\Http\Controllers\PublicSite\ContactMessageController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 
-// Replace /my/credits preview and protect ALL /my preview routes with role.customer.
 Route::get('/my/credits', [\App\Http\Controllers\Customer\CreditWalletController::class, 'index'])->middleware('role.customer')->name('my.credits');
 
-// Replace GET /book/payment in the booking-step loop. Other booking steps are previews.
-// Payment/finalization integration is NOT complete; these routes alone do not finish it.
 Route::get('/book/payment', [\App\Http\Controllers\Customer\PaymentController::class, 'show'])->middleware('role.customer')->name('book.payment');
 Route::post('/book/payment/intent', [\App\Http\Controllers\Customer\PaymentController::class, 'intent'])->middleware('role.customer')->name('book.payment.intent');
 Route::get('/book/payment/return', [\App\Http\Controllers\Customer\PaymentController::class, 'return'])->middleware('role.customer')->name('book.payment.return');
 Route::post('/stripe/webhook', [\App\Http\Controllers\Webhooks\StripeWebhookController::class, 'handle'])->name('stripe.webhook');
-// bootstrap/app.php already excludes stripe/webhook from CSRF; signature validation is mandatory.
 
-// Replace GET /admin/airports preview; add its missing CRUD endpoints.
 Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(function () {
     Route::get('/airports', [\App\Http\Controllers\SuperAdmin\AirportController::class, 'index'])->name('airports');
     Route::get('/airports/create', [\App\Http\Controllers\SuperAdmin\AirportController::class, 'create'])->name('airports.create');
@@ -80,6 +57,3 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::delete('/airports/{airport}', [\App\Http\Controllers\SuperAdmin\AirportController::class, 'destroy'])->whereNumber('airport')->name('airports.destroy');
 });
 
-// Also wrap the existing airline panel routes in role.airline-admin and admin panel
-// routes in role.super-admin. Do not register new routes for empty controller methods.
-// Remove obsolete duplicate preview/resource GET definitions for Dev 3 features.
