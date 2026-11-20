@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\BookingFinalizationService;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +24,7 @@ class HostedStripeCheckoutTest extends TestCase
 
     private ?ClientInterface $previousStripeHttpClient = null;
 
-    /** @var array<int, array{method: string, url: string, params: array}> */
+    /** @var array<int, array{method: string, url: string, headers: array, params: array}> */
     private array $stripeRequests = [];
 
     /** @var array<int, int> */
@@ -125,6 +126,7 @@ class HostedStripeCheckoutTest extends TestCase
     public function test_return_marks_paid_once_then_the_same_session_webhook_is_a_no_op(): void
     {
         config()->set('services.stripe.webhook_secret', 'whsec_checkout_test');
+        $this->mockBookingFinalizerToConfirm();
         [$user, , $booking] = $this->makeCustomerBooking(total: '115.00');
         $session = $this->checkoutSessionResponse(
             'cs_test_paid',
@@ -227,6 +229,7 @@ class HostedStripeCheckoutTest extends TestCase
     public function test_return_verifies_saved_quote_after_rate_configuration_changes(): void
     {
         config()->set('services.stripe.jod_rate', '1.41044');
+        $this->mockBookingFinalizerToConfirm();
         [$user, , $booking] = $this->makeCustomerBooking(total: '115.00');
         $session = $this->checkoutSessionResponse(
             'cs_test_stable_return',
@@ -253,6 +256,7 @@ class HostedStripeCheckoutTest extends TestCase
     {
         config()->set('services.stripe.webhook_secret', 'whsec_checkout_test');
         config()->set('services.stripe.jod_rate', '1.41044');
+        $this->mockBookingFinalizerToConfirm();
         [, , $booking] = $this->makeCustomerBooking(total: '115.00');
         $session = $this->checkoutSessionResponse(
             'cs_test_stable_webhook',
@@ -274,7 +278,7 @@ class HostedStripeCheckoutTest extends TestCase
         ]);
     }
 
-    public function test_second_successful_payment_for_a_booking_is_logged_and_not_recorded(): void
+    public function test_second_successful_payment_for_a_booking_is_failed_and_refunded(): void
     {
         [, $customer, $booking] = $this->makeCustomerBooking();
         $existing = Payment::create([
@@ -283,6 +287,7 @@ class HostedStripeCheckoutTest extends TestCase
             'amount' => '100.00',
             'status' => 'succeeded',
         ]);
+        $this->mockStripeResponses([$this->refundResponse('re_second_success', 'pi_second_success', 10000)]);
         Log::spy();
 
         $result = (new PaymentService)->markPaid(
@@ -292,16 +297,19 @@ class HostedStripeCheckoutTest extends TestCase
             '100.00',
         );
 
-        $this->assertFalse($result);
-        $this->assertDatabaseCount('payments', 1);
+        $this->assertTrue($result);
+        $this->assertDatabaseCount('payments', 2);
         $this->assertSame('succeeded', $existing->fresh()->status);
         $this->assertSame('100.00', $existing->fresh()->amount);
-        Log::shouldHaveReceived('warning')->once();
+        $this->assertSame('failed', Payment::where('stripe_payment_intent_id', 'pi_second_success')->value('status'));
+        $this->assertRefundRequests('pi_second_success', 1);
+        Log::shouldHaveReceived('error')->once();
     }
 
-    public function test_mark_paid_ignores_a_booking_that_is_no_longer_pending(): void
+    public function test_paid_intent_for_a_non_pending_booking_is_recorded_failed_and_refunded(): void
     {
         [, $customer, $booking] = $this->makeCustomerBooking(status: 'confirmed');
+        $this->mockStripeResponses([$this->refundResponse('re_after_confirmation', 'pi_after_confirmation', 10000)]);
 
         $result = (new PaymentService)->markPaid(
             'pi_after_confirmation',
@@ -310,9 +318,177 @@ class HostedStripeCheckoutTest extends TestCase
             '100.00',
         );
 
-        $this->assertFalse($result);
-        $this->assertDatabaseCount('payments', 0);
+        $this->assertTrue($result);
+        $this->assertDatabaseHas('payments', [
+            'stripe_payment_intent_id' => 'pi_after_confirmation',
+            'status' => 'failed',
+            'receipt_number' => null,
+            'paid_at' => null,
+        ]);
+        $this->assertRefundRequests('pi_after_confirmation', 1);
         $this->assertSame('confirmed', $booking->fresh()->status);
+    }
+
+    public function test_paid_return_for_cancelled_booking_refunds_and_repeated_return_uses_same_idempotency_key(): void
+    {
+        [$user, , $booking] = $this->makeCustomerBooking(status: 'cancelled');
+        $session = $this->checkoutSessionResponse(
+            'cs_cancelled_paid',
+            'https://checkout.stripe.com/c/pay/cs_cancelled_paid',
+            'paid',
+            'pi_cancelled_paid',
+            $booking,
+        );
+        $refund = $this->refundResponse('re_cancelled_paid', 'pi_cancelled_paid', 10000);
+        $this->mockStripeResponses([$session, $refund, $session, $refund]);
+        Log::spy();
+        $returnUrl = route('book.payment.return', ['session_id' => 'cs_cancelled_paid']);
+
+        $this->actingAs($user)->get($returnUrl)
+            ->assertRedirect(route('my.bookings'))
+            ->assertSessionHas('status', 'Your payment was refunded because the booking could not be completed. See My Bookings for your reservations.');
+        $this->get($returnUrl)->assertRedirect(route('my.bookings'));
+
+        $this->assertDatabaseCount('payments', 1);
+        $this->assertDatabaseHas('payments', [
+            'stripe_payment_intent_id' => 'pi_cancelled_paid',
+            'status' => 'failed',
+            'receipt_number' => null,
+            'paid_at' => null,
+        ]);
+        $this->assertDatabaseCount('tickets', 0);
+        $this->assertRefundRequests('pi_cancelled_paid', 2);
+        Log::shouldHaveReceived('error')->twice();
+    }
+
+    public function test_repeated_paid_webhook_refunds_cancelled_booking_with_the_same_idempotency_key(): void
+    {
+        config()->set('services.stripe.webhook_secret', 'whsec_checkout_test');
+        [, , $booking] = $this->makeCustomerBooking(status: 'cancelled');
+        $session = $this->checkoutSessionResponse(
+            'cs_cancelled_webhook',
+            'https://checkout.stripe.com/c/pay/cs_cancelled_webhook',
+            'paid',
+            'pi_cancelled_webhook',
+            $booking,
+        );
+        $refund = $this->refundResponse('re_cancelled_webhook', 'pi_cancelled_webhook', 10000);
+        $this->mockStripeResponses([$refund, $refund]);
+
+        $event = $this->checkoutCompletedEvent($session);
+        $this->sendSignedWebhook($event)->assertOk()->assertExactJson(['received' => true]);
+        $this->sendSignedWebhook($event)->assertOk()->assertExactJson(['received' => true]);
+
+        $this->assertDatabaseCount('payments', 1);
+        $this->assertDatabaseHas('payments', [
+            'stripe_payment_intent_id' => 'pi_cancelled_webhook',
+            'status' => 'failed',
+            'receipt_number' => null,
+            'paid_at' => null,
+        ]);
+        $this->assertDatabaseCount('tickets', 0);
+        $this->assertRefundRequests('pi_cancelled_webhook', 2);
+    }
+
+    public function test_finalizer_exception_records_failed_payment_and_refunds(): void
+    {
+        [, $customer, $booking] = $this->makeCustomerBooking();
+        $finalizer = Mockery::mock(BookingFinalizationService::class);
+        $finalizer->shouldReceive('finalize')->once()->andThrow(new \RuntimeException('private finalizer detail'));
+        app()->instance(BookingFinalizationService::class, $finalizer);
+        $this->mockStripeResponses([$this->refundResponse('re_finalizer_error', 'pi_finalizer_error', 10000)]);
+        Log::spy();
+
+        $result = app(PaymentService::class)->markPaidWithOutcome(
+            'pi_finalizer_error',
+            (int) $booking->id,
+            (int) $customer->id,
+            '100.00',
+        );
+
+        $this->assertSame(PaymentService::PAID_REFUNDED, $result);
+        $this->assertDatabaseHas('payments', [
+            'stripe_payment_intent_id' => 'pi_finalizer_error',
+            'status' => 'failed',
+            'receipt_number' => null,
+            'paid_at' => null,
+        ]);
+        $this->assertSame('pending', $booking->fresh()->status);
+        $this->assertDatabaseCount('tickets', 0);
+        $this->assertRefundRequests('pi_finalizer_error', 1);
+        Log::shouldHaveReceived('error')->once()->with(
+            'Stripe payment could not be finalized; issuing a full refund.',
+            Mockery::on(fn (array $context): bool => $context['booking_id'] === $booking->id
+                && $context['stripe_payment_intent_id'] === 'pi_finalizer_error'
+                && $context['reason'] === 'finalization_threw'
+                && $context['exception_class'] === \RuntimeException::class),
+        );
+    }
+
+    public function test_finalizer_that_returns_without_confirmation_causes_a_refund(): void
+    {
+        [, $customer, $booking] = $this->makeCustomerBooking();
+        $this->mockStripeResponses([$this->refundResponse('re_no_confirmation', 'pi_no_confirmation', 10000)]);
+
+        $result = app(PaymentService::class)->markPaidWithOutcome(
+            'pi_no_confirmation',
+            (int) $booking->id,
+            (int) $customer->id,
+            '100.00',
+        );
+
+        $this->assertSame(PaymentService::PAID_REFUNDED, $result);
+        $this->assertDatabaseHas('payments', [
+            'stripe_payment_intent_id' => 'pi_no_confirmation',
+            'status' => 'failed',
+            'receipt_number' => null,
+            'paid_at' => null,
+        ]);
+        $this->assertSame('pending', $booking->fresh()->status);
+        $this->assertDatabaseCount('tickets', 0);
+        $this->assertRefundRequests('pi_no_confirmation', 1);
+    }
+
+    public function test_refund_api_failure_is_logged_critically_and_return_shows_support_message(): void
+    {
+        [$user, , $booking] = $this->makeCustomerBooking(status: 'cancelled');
+        $session = $this->checkoutSessionResponse(
+            'cs_refund_failure',
+            'https://checkout.stripe.com/c/pay/cs_refund_failure',
+            'paid',
+            'pi_refund_failure',
+            $booking,
+        );
+        $this->mockStripeResponses([
+            $session,
+            [
+                '_http_status' => 400,
+                'error' => ['type' => 'invalid_request_error', 'message' => 'Sensitive Stripe detail'],
+            ],
+        ]);
+        Log::spy();
+
+        $this->actingAs($user)
+            ->get(route('book.payment.return', ['session_id' => 'cs_refund_failure']))
+            ->assertRedirect(route('my.bookings'))
+            ->assertSessionHas('status', 'We could not complete the booking or refund your payment. Please contact support.');
+
+        $this->get(route('my.bookings'))
+            ->assertOk()
+            ->assertSee('Please contact support.')
+            ->assertDontSee('Sensitive Stripe detail');
+        $this->assertDatabaseHas('payments', [
+            'stripe_payment_intent_id' => 'pi_refund_failure',
+            'status' => 'failed',
+            'receipt_number' => null,
+            'paid_at' => null,
+        ]);
+        Log::shouldHaveReceived('critical')->once()->with(
+            'Stripe refund failed after booking finalization failure.',
+            Mockery::on(fn (array $context): bool => $context['booking_id'] === $booking->id
+                && $context['stripe_payment_intent_id'] === 'pi_refund_failure'
+                && $context['exception_class'] !== ''),
+        );
     }
 
     public function test_stripe_create_api_error_shows_friendly_message_and_records_nothing(): void
@@ -405,6 +581,46 @@ class HostedStripeCheckoutTest extends TestCase
             ->assertSee('Checkout was cancelled. No payment was taken.');
     }
 
+    private function mockBookingFinalizerToConfirm(): void
+    {
+        $finalizer = Mockery::mock(BookingFinalizationService::class);
+        $finalizer->shouldReceive('finalize')->andReturnUsing(static function (Booking $booking): void {
+            $booking->update(['status' => 'confirmed']);
+        });
+        app()->instance(BookingFinalizationService::class, $finalizer);
+    }
+
+    private function refundResponse(string $id, string $paymentIntentId, int $amount): array
+    {
+        return [
+            'id' => $id,
+            'object' => 'refund',
+            'amount' => $amount,
+            'currency' => 'usd',
+            'payment_intent' => $paymentIntentId,
+            'status' => 'succeeded',
+        ];
+    }
+
+    private function assertRefundRequests(string $paymentIntentId, int $count): void
+    {
+        $requests = array_values(array_filter(
+            $this->stripeRequests,
+            static fn (array $request): bool => parse_url($request['url'], PHP_URL_PATH) === '/v1/refunds',
+        ));
+
+        $this->assertCount($count, $requests);
+
+        foreach ($requests as $request) {
+            $this->assertSame('post', strtolower($request['method']));
+            $this->assertSame(['payment_intent' => $paymentIntentId], $request['params']);
+            $this->assertContains(
+                strtolower('Idempotency-Key: refund_'.$paymentIntentId),
+                array_map('strtolower', $request['headers']),
+            );
+        }
+    }
+
     private function mockStripeResponses(array $responses): void
     {
         config()->set('services.stripe.secret', 'sk_test_checkout_mock');
@@ -416,12 +632,15 @@ class HostedStripeCheckoutTest extends TestCase
                 $this->stripeRequests[] = [
                     'method' => $arguments[0],
                     'url' => $arguments[1],
+                    'headers' => $arguments[2],
                     'params' => $arguments[3] ?? [],
                 ];
                 $this->stripeTransactionLevels[] = DB::transactionLevel();
                 $response = array_shift($responses);
+                $status = $response['_http_status'] ?? 200;
+                unset($response['_http_status']);
 
-                return [json_encode($response, JSON_THROW_ON_ERROR), 200, ['Request-Id' => 'req_checkout_test']];
+                return [json_encode($response, JSON_THROW_ON_ERROR), $status, ['Request-Id' => 'req_checkout_test']];
             });
         ApiRequestor::setHttpClient($httpClient);
 
