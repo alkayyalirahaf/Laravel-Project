@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'currency' => env('STRIPE_CURRENCY', 'usd'),
+        'jod_rate' => env('STRIPE_JOD_TO_USD_RATE', 1.41044),
+    ],
+
 ];

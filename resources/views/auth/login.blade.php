@@ -5,17 +5,17 @@
 @section('content')
 <div class="narrow">
     <h1>{{ $title }}</h1>
-    <form method="POST" data-preview-form class="panel stack">
-        <p class="notice">Preview only. Use sample information. Submission is unavailable.</p>
+    <form action="{{ $action }}" method="POST" class="panel stack" onsubmit="if (this.dataset.submitting === 'true') return false; this.dataset.submitting = 'true'; const button = this.querySelector('button[type=submit]'); button.disabled = true; button.textContent = 'Signing in…';">
+        @csrf
         <x-travel-field name="email" label="Email" type="email" autocomplete="username" required />
-        <x-travel-field name="password" label="Password" type="password" disabled autocomplete="current-password" required />
-        <button class="button" disabled>Preview Sign in</button><p data-preview-status role="status"></p>
+        <x-travel-field name="password" label="Password" type="password" autocomplete="current-password" required />
+        <button class="button" type="submit">Sign in</button>
     </form>
     @if(request()->routeIs('login'))
         <div class="actions section">
-            <a href="{{ route('register') }}">Create an account</a>
-            <a href="{{ route('airline.login') }}">Airline staff</a>
-            <a href="{{ route('admin.login') }}">Platform staff</a>
+            <a class="button secondary" href="{{ route('register') }}">Create an account</a>
+            <a class="button secondary" href="{{ route('airline.login') }}">Airline staff</a>
+            <a class="button secondary" href="{{ route('admin.login') }}">Platform staff</a>
         </div>
     @endif
 </div>
