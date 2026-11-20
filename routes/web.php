@@ -22,9 +22,21 @@ use App\Http\Middleware\SetLandingLocale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
+use App\Http\Controllers\PublicSite\DestinationController;
+use App\Http\Controllers\SuperAdmin\AirlineController;
+use App\Http\Controllers\SuperAdmin\AirlineAdminController;
+use App\Http\Controllers\SuperAdmin\CustomerController;
+use App\Http\Controllers\SuperAdmin\ReviewModerationController;
+use App\Http\Controllers\SuperAdmin\AiConversationController as AdminAiConversationController;
+use App\Http\Controllers\SuperAdmin\NotificationLogController;
+use App\Http\Controllers\SuperAdmin\ContactMessageController as AdminContactMessageController;
+
+
+
 Route::middleware(SetLandingLocale::class)->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::view('/destinations', 'pages.destinations')->name('destinations');
+   Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations');
 });
 
 Route::post('/language/{locale}', function (Request $request, string $locale) {
@@ -160,9 +172,21 @@ $registerPanelRoutes = function (string $area, string $view, array $navigation) 
     $middleware = $area === 'admin' ? 'role.super-admin' : 'role.airline-admin';
     Route::middleware($middleware)->group(function () use ($area, $view, $navigation) {
         foreach ($navigation as $screen => $page) {
-            if ($area === 'admin' && in_array($screen, ['dashboard', 'countries', 'airports', 'credits'], true)) {
-                continue;
-            }
+          if ($area === 'admin' && in_array($screen, [
+    'dashboard',
+    'airlines',
+    'airline-admins',
+    'customers',
+    'countries',
+    'airports',
+    'credits',
+    'reviews',
+    'ai-conversations',
+    'notifications',
+    'messages',
+], true)) {
+    continue;
+}
             [$path, $title] = $page;
 
             Route::view("/{$area}{$path}", $view, [
@@ -198,6 +222,46 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::get('/countries/{country}/edit', [CountryController::class, 'edit'])->whereNumber('country')->name('countries.edit');
     Route::put('/countries/{country}', [CountryController::class, 'update'])->whereNumber('country')->name('countries.update');
     Route::delete('/countries/{country}', [CountryController::class, 'destroy'])->whereNumber('country')->name('countries.destroy');
+
+
+
+
+    // Airlines
+    Route::get('/airlines', [AirlineController::class, 'index'])->name('airlines');
+    Route::get('/airlines/create', [AirlineController::class, 'create'])->name('airlines.create');
+    Route::post('/airlines', [AirlineController::class, 'store'])->name('airlines.store');
+    Route::get('/airlines/{id}/edit', [AirlineController::class, 'edit'])->whereNumber('id')->name('airlines.edit');
+    Route::put('/airlines/{id}', [AirlineController::class, 'update'])->whereNumber('id')->name('airlines.update');
+    Route::delete('/airlines/{id}', [AirlineController::class, 'destroy'])->whereNumber('id')->name('airlines.destroy');
+    Route::patch('/airlines/{id}/suspend', [AirlineController::class, 'suspend'])->whereNumber('id')->name('airlines.suspend');
+
+    // Airline admins
+    Route::get('/airline-admins', [AirlineAdminController::class, 'index'])->name('airline-admins');
+    Route::get('/airline-admins/create', [AirlineAdminController::class, 'create'])->name('airline-admins.create');
+    Route::post('/airline-admins', [AirlineAdminController::class, 'store'])->name('airline-admins.store');
+    Route::get('/airline-admins/{airlineAdmin}/edit', [AirlineAdminController::class, 'edit'])->name('airline-admins.edit');
+    Route::put('/airline-admins/{airlineAdmin}', [AirlineAdminController::class, 'update'])->name('airline-admins.update');
+    Route::delete('/airline-admins/{airlineAdmin}', [AirlineAdminController::class, 'destroy'])->name('airline-admins.destroy');
+
+    // Customers
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
+    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::patch('/customers/{customer}/ban', [CustomerController::class, 'setBanStatus'])->name('customers.ban');
+
+    // Review moderation
+    Route::get('/reviews', [ReviewModerationController::class, 'index'])->name('reviews');
+    Route::patch('/reviews/{review}', [ReviewModerationController::class, 'update'])->name('reviews.update');
+
+    // AI conversations
+    Route::get('/ai-conversations', [AdminAiConversationController::class, 'index'])->name('ai-conversations');
+    Route::get('/ai-conversations/{conversation}', [AdminAiConversationController::class, 'show'])->name('ai-conversations.show');
+
+    // Notification logs
+    Route::get('/notifications', [NotificationLogController::class, 'index'])->name('notifications');
+
+    // Contact messages
+    Route::get('/messages', [AdminContactMessageController::class, 'index'])->name('messages');
+    Route::patch('/messages/{message}/handled', [AdminContactMessageController::class, 'markHandled'])->name('messages.handled');
 });
 
 
