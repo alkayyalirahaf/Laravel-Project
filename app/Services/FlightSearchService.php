@@ -18,9 +18,37 @@ class FlightSearchService
             }
         }
 
-        $input['trip'] = $input['trip'] ?? (!empty($input['return']) ? 'round_trip' : 'one_way');
+        $trip = $input['trip'] ?? (!empty($input['return']) ? 'round_trip' : 'one_way');
+        $input['trip'] = match ($trip) {
+            'one-way' => 'one_way',
+            'round-trip' => 'round_trip',
+            default => $trip,
+        };
+
+        $travelers = [];
+        if (array_intersect(['adults', 'youth', 'children', 'infants'], array_keys($input))) {
+            $travelers = Validator::make($input, [
+                'adults' => ['required', 'integer', 'min:1', 'max:9'],
+                'youth' => ['sometimes', 'integer', 'min:0', 'max:9'],
+                'children' => ['sometimes', 'integer', 'min:0', 'max:9'],
+                'infants' => ['sometimes', 'integer', 'min:0', 'max:0'],
+                'passengers' => ['sometimes', 'integer', 'min:1', 'max:9'],
+            ], ['infants.max' => 'Infant seat rules are not configured yet. Please contact support before searching with an infant.'])->validate();
+
+            $seatsNeeded = (int) $travelers['adults'] + (int) ($travelers['youth'] ?? 0) + (int) ($travelers['children'] ?? 0);
+            if (isset($travelers['passengers']) && (int) $travelers['passengers'] !== $seatsNeeded) {
+                throw ValidationException::withMessages(['passengers' => 'Seat count must match the submitted traveler counts.']);
+            }
+            unset($travelers['passengers']);
+            $input['passengers'] = $seatsNeeded;
+        }
+
         $input['passengers'] = $input['passengers'] ?? 1;
-        $input['sort'] = $input['sort'] ?? 'departure_asc';
+        $input['sort'] = match ($input['sort'] ?? 'departure_asc') {
+            'earliest' => 'departure_asc',
+            'latest' => 'departure_desc',
+            default => $input['sort'] ?? 'departure_asc',
+        };
         $input['leg'] = $input['leg'] ?? 'outbound';
         $input['min_price'] = $input['min_price'] ?? 0;
 
@@ -45,7 +73,7 @@ class FlightSearchService
             throw ValidationException::withMessages(['leg' => 'A return leg requires a round-trip search.']);
         }
 
-        return $filters;
+        return array_merge($filters, $travelers);
     }
 
     public function search(array $filters)

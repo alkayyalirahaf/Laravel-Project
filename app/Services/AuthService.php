@@ -19,13 +19,13 @@ class AuthService
     /**
      * Authenticate the credentials and require exactly the expected profile role.
      */
-    public function attempt(array $credentials, string $expectedRole): bool
+    public function attempt(array $credentials, string $expectedRole, bool $remember = false): bool
     {
         if (! in_array($expectedRole, [self::ROLE_CUSTOMER, self::ROLE_AIRLINE_ADMIN, self::ROLE_SUPER_ADMIN], true)) {
             return false;
         }
 
-        if (! Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials, $remember)) {
             return false;
         }
 
@@ -60,7 +60,15 @@ class AuthService
 
         $roles = array_keys(array_filter($profiles));
 
-        return count($roles) === 1 ? $roles[0] : null;
+        if (count($roles) !== 1) {
+            return null;
+        }
+
+        if ($roles[0] === self::ROLE_AIRLINE_ADMIN && $user->airlineAdmin->airline?->status !== 'active') {
+            return null;
+        }
+
+        return $roles[0];
     }
 
     public function logout(): void

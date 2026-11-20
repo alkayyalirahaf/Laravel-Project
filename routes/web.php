@@ -1,13 +1,29 @@
 <?php
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\Auth\AirlineAdminSessionController;
+use App\Http\Controllers\Auth\CustomerSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Customer\AiConversationController;
+use App\Http\Controllers\Customer\CreditWalletController;
+use App\Http\Controllers\Customer\PaymentController;
+use App\Http\Controllers\Customer\ReviewController;
+use App\Http\Controllers\PublicSite\CompareController;
+use App\Http\Controllers\PublicSite\ContactMessageController;
+use App\Http\Controllers\PublicSite\HomeController;
+use App\Http\Controllers\PublicSite\InformationController;
 use App\Http\Controllers\PublicFlightController;
+use App\Http\Controllers\SuperAdmin\AirportController;
+use App\Http\Controllers\SuperAdmin\CountryController;
+use App\Http\Controllers\SuperAdmin\CreditController;
+use App\Http\Controllers\SuperAdmin\DashboardController;
+use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Middleware\SetLandingLocale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(SetLandingLocale::class)->group(function () {
-    Route::view('/', 'welcome')->name('home');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::view('/destinations', 'pages.destinations')->name('destinations');
 });
 
@@ -19,28 +35,24 @@ Route::post('/language/{locale}', function (Request $request, string $locale) {
 
 Route::redirect('/destinations/{country}', '/destinations');
 
-Route::group(['where' => ['flight' => '[0-9]+']], function () {
-    Route::resource('flights', PublicFlightController::class)
-        ->only(['index', 'show'])
-        ->names(['index' => 'flights.search']);
-});
-
-Route::view('/compare', 'flights.compare', ['title' => 'Compare'])
-    ->name('compare');
+Route::get('/flights', [PublicFlightController::class, 'index'])->name('flights.search');
+Route::post('/flights/selection', [PublicFlightController::class, 'select'])->name('flights.selection');
+Route::get('/flights/{flight}', [PublicFlightController::class, 'show'])->whereNumber('flight')->name('flights.show');
+Route::get('/compare', [CompareController::class, 'index'])->name('compare');
 
 Route::view('/booking-lookup', 'booking.lookup', ['title' => 'Booking Lookup'])
     ->name('booking.lookup');
 
-Route::view('/assistant', 'pages.assistant', ['title' => 'AI Assistant'])
-    ->name('assistant');
+Route::get('/assistant', [AiConversationController::class, 'index'])->middleware('role.customer')->name('assistant');
 
-Route::view('/login', 'auth.login', ['title' => 'Login'])->name('login');
-Route::view('/register', 'auth.register', ['title' => 'Register'])->name('register');
+Route::get('/login', [CustomerSessionController::class, 'create'])->name('login');
+Route::post('/login', [CustomerSessionController::class, 'store'])->middleware('throttle:auth-login')->name('login.store');
+Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
+Route::post('/logout', [CustomerSessionController::class, 'destroy'])->middleware('auth')->name('logout');
 
 $informationPages = [
     'about' => 'About Us',
-    'faq' => 'FAQ',
-    'terms' => 'Terms and Conditions',
     'privacy' => 'Privacy Policy',
     'contact' => 'Contact and Suggestions',
 ];
@@ -49,6 +61,9 @@ foreach ($informationPages as $page => $title) {
     Route::view("/{$page}", 'pages.information', compact('page', 'title'))
         ->name($page);
 }
+Route::get('/faq', [InformationController::class, 'faq'])->name('faq');
+Route::get('/terms', [InformationController::class, 'terms'])->name('terms');
+Route::post('/contact', [ContactMessageController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 
 $steps = [
     'passengers' => 'Passengers',
@@ -59,11 +74,19 @@ $steps = [
 ];
 
 foreach ($steps as $step => $title) {
+    if ($step === 'payment') {
+        continue;
+    }
     Route::view("/book/{$step}", 'booking.checkout', compact('step', 'steps', 'title'))
+        ->middleware('role.customer')
         ->name("book.{$step}");
 }
+Route::get('/book/payment', [PaymentController::class, 'show'])->middleware('role.customer')->name('book.payment');
+Route::post('/book/payment/intent', [PaymentController::class, 'intent'])->middleware('role.customer')->name('book.payment.intent');
+Route::get('/book/payment/return', [PaymentController::class, 'return'])->middleware('role.customer')->name('book.payment.return');
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
-Route::prefix('my')->name('my.')->group(function () {
+Route::prefix('my')->name('my.')->middleware('role.customer')->group(function () {
     Route::view('/bookings', 'customer.account', [
         'screen' => 'bookings',
         'title' => 'My Bookings',
@@ -79,26 +102,29 @@ Route::prefix('my')->name('my.')->group(function () {
         'title' => 'Write a Review',
     ])->name('review');
 
-    Route::view('/credits', 'customer.account', [
-        'screen' => 'credits',
-        'title' => 'Credits Wallet',
-    ])->name('credits');
+    Route::get('/credits', [CreditWalletController::class, 'index'])->name('credits');
 
     Route::view('/profile', 'customer.account', [
         'screen' => 'profile',
         'title' => 'Profile',
     ])->name('profile');
+
+    Route::get('/booking-flights/{bookingFlight}/review', [ReviewController::class, 'create'])->whereNumber('bookingFlight')->name('reviews.create');
+    Route::post('/booking-flights/{bookingFlight}/review', [ReviewController::class, 'store'])->whereNumber('bookingFlight')->name('reviews.store');
+    Route::get('/assistant', [AiConversationController::class, 'index'])->name('assistant');
+    Route::post('/assistant', [AiConversationController::class, 'store'])->middleware('throttle:10,1')->name('assistant.store');
+    Route::get('/assistant/{conversation}', [AiConversationController::class, 'show'])->whereNumber('conversation')->name('assistant.show');
 });
 
 Route::get('/admin/login', [AdminAuthController::class, 'showLogin'])
     ->name('admin.login');
 
 Route::post('/admin/login', [AdminAuthController::class, 'login'])
+    ->middleware('throttle:auth-login')
     ->name('admin.login.submit');
 
-Route::view('/airline/login', 'airline-admin.login', [
-    'title' => 'Airline Admin Login',
-])->name('airline.login');
+Route::get('/airline/login', [AirlineAdminSessionController::class, 'create'])->name('airline.login');
+Route::post('/airline/login', [AirlineAdminSessionController::class, 'store'])->middleware('throttle:auth-login')->name('airline.login.submit');
 
 $adminPages = [
     'dashboard' => ['', 'Dashboard'],
@@ -131,17 +157,23 @@ $airlinePages = [
 ];
 
 $registerPanelRoutes = function (string $area, string $view, array $navigation) {
-    foreach ($navigation as $screen => $page) {
-        [$path, $title] = $page;
+    $middleware = $area === 'admin' ? 'role.super-admin' : 'role.airline-admin';
+    Route::middleware($middleware)->group(function () use ($area, $view, $navigation) {
+        foreach ($navigation as $screen => $page) {
+            if ($area === 'admin' && in_array($screen, ['dashboard', 'countries', 'airports', 'credits'], true)) {
+                continue;
+            }
+            [$path, $title] = $page;
 
-        Route::view("/{$area}{$path}", $view, [
-            'area' => $area,
-            'screen' => $screen,
-            'title' => $title,
-            'columns' => $page[2] ?? [],
-            'navigation' => $navigation,
-        ])->whereNumber('id')->name("{$area}.{$screen}");
-    }
+            Route::view("/{$area}{$path}", $view, [
+                'area' => $area,
+                'screen' => $screen,
+                'title' => $title,
+                'columns' => $page[2] ?? [],
+                'navigation' => $navigation,
+            ])->whereNumber('id')->name("{$area}.{$screen}");
+        }
+    });
 };
 
 $registerPanelRoutes('admin', 'super-admin.panel', $adminPages);
@@ -149,36 +181,24 @@ $registerPanelRoutes('airline', 'airline-admin.panel', $airlinePages);
 
 
 
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
-    Route::get('/countries', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'index'])->name('countries');
-    Route::get('/countries/create', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'create'])->name('countries.create');
-    Route::post('/countries', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'store'])->name('countries.store');
-    Route::get('/countries/{country}/edit', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'edit'])->whereNumber('country')->name('countries.edit');
-    Route::put('/countries/{country}', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'update'])->whereNumber('country')->name('countries.update');
-    Route::delete('/countries/{country}', [\App\Http\Controllers\SuperAdmin\CountryController::class, 'destroy'])->whereNumber('country')->name('countries.destroy');
+Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/credits', [CreditController::class, 'index'])->name('credits');
+    Route::post('/credits/{customer}', [CreditController::class, 'update'])->whereNumber('customer')->name('credits.update');
+
+    Route::get('/airports', [AirportController::class, 'index'])->name('airports');
+    Route::get('/airports/create', [AirportController::class, 'create'])->name('airports.create');
+    Route::post('/airports', [AirportController::class, 'store'])->name('airports.store');
+    Route::get('/airports/{airport}/edit', [AirportController::class, 'edit'])->whereNumber('airport')->name('airports.edit');
+    Route::put('/airports/{airport}', [AirportController::class, 'update'])->whereNumber('airport')->name('airports.update');
+    Route::delete('/airports/{airport}', [AirportController::class, 'destroy'])->whereNumber('airport')->name('airports.destroy');
+    Route::get('/countries', [CountryController::class, 'index'])->name('countries');
+    Route::get('/countries/create', [CountryController::class, 'create'])->name('countries.create');
+    Route::post('/countries', [CountryController::class, 'store'])->name('countries.store');
+    Route::get('/countries/{country}/edit', [CountryController::class, 'edit'])->whereNumber('country')->name('countries.edit');
+    Route::put('/countries/{country}', [CountryController::class, 'update'])->whereNumber('country')->name('countries.update');
+    Route::delete('/countries/{country}', [CountryController::class, 'destroy'])->whereNumber('country')->name('countries.destroy');
 });
-
-Route::get('/flights', [\App\Http\Controllers\PublicSite\FlightController::class, 'index'])->name('flights.search');
-Route::post('/flights/selection', [\App\Http\Controllers\PublicSite\FlightController::class, 'select'])->name('flights.selection');
-Route::get('/flights/{flight}', [\App\Http\Controllers\PublicSite\FlightController::class, 'show'])->whereNumber('flight')->name('flights.show');
-
-Route::get('/compare', [\App\Http\Controllers\PublicSite\CompareController::class, 'index'])->name('compare');
-
-Route::get('/admin/credits', [\App\Http\Controllers\SuperAdmin\CreditController::class, 'index'])->middleware('auth')->name('admin.credits');
-Route::post('/admin/credits/{customer}', [\App\Http\Controllers\SuperAdmin\CreditController::class, 'update'])->whereNumber('customer')->middleware('auth')->name('admin.credits.update');
-
-Route::get('/my/booking-flights/{bookingFlight}/review', [\App\Http\Controllers\Customer\ReviewController::class, 'create'])->whereNumber('bookingFlight')->middleware('auth')->name('my.reviews.create');
-Route::post('/my/booking-flights/{bookingFlight}/review', [\App\Http\Controllers\Customer\ReviewController::class, 'store'])->whereNumber('bookingFlight')->middleware('auth')->name('my.reviews.store');
-
-Route::get('/assistant', [\App\Http\Controllers\Customer\AiConversationController::class, 'index'])->middleware('auth')->name('assistant');
-Route::get('/my/assistant', [\App\Http\Controllers\Customer\AiConversationController::class, 'index'])->middleware('auth')->name('my.assistant');
-Route::post('/my/assistant', [\App\Http\Controllers\Customer\AiConversationController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('my.assistant.store');
-Route::get('/my/assistant/{conversation}', [\App\Http\Controllers\Customer\AiConversationController::class, 'show'])->whereNumber('conversation')->middleware('auth')->name('my.assistant.show');
-
-Route::get('/admin', [\App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])->middleware('auth')->name('admin.dashboard');
-
-Route::get('/faq', [\App\Http\Controllers\PublicSite\InformationController::class, 'faq'])->name('faq');
-Route::get('/terms', [\App\Http\Controllers\PublicSite\InformationController::class, 'terms'])->name('terms');
 
 
 

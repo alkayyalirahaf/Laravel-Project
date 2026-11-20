@@ -24,10 +24,12 @@
                 <a href="{{ route('booking.lookup') }}">{{ __('Booking lookup') }}</a>
                 <a href="{{ route('my.bookings') }}">{{ __('My bookings') }}</a>
                 @auth
+                    @if(\Illuminate\Support\Facades\Route::has('logout'))
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button class="button secondary" type="submit">{{ __('Sign out') }}</button>
                     </form>
+                    @endif
                 @else
                     <a class="button secondary" href="{{ route('login') }}">{{ __('Sign in') }}</a>
                 @endauth
