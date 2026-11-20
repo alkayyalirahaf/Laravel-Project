@@ -6,10 +6,13 @@ use App\Http\Controllers\AdminAuthController;
 use App\Models\Airline;
 use App\Models\Customer;
 use App\Models\User;
+use App\Services\AuthService;
 use Database\Seeders\AuthSeeder;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\TestCase;
@@ -91,6 +94,57 @@ class AuthFlowTest extends TestCase
             ->assertOk()
             ->assertSee('These credentials do not match our records.');
         $this->assertGuest();
+    }
+
+    public function test_banned_customer_cannot_log_in_and_receives_the_suspension_message(): void
+    {
+        $this->addIsBannedColumn();
+        $user = $this->makeRoleUser('customer', 'banned.login@example.test');
+        $user->customer->forceFill(['is_banned' => true])->save();
+
+        $this->withSession(['pre-login-marker' => 'discard-me'])
+            ->from(route('login'))
+            ->post(route('login.store'), [
+                'email' => $user->email,
+                'password' => 'CorrectPassword123!',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('email')
+            ->assertSessionMissing('pre-login-marker');
+
+        $this->assertGuest();
+        $this->get(route('login'))->assertSee(AuthService::CUSTOMER_SUSPENDED_MESSAGE);
+    }
+
+    public function test_banned_customer_with_an_active_session_is_logged_out_on_the_next_customer_request(): void
+    {
+        $this->addIsBannedColumn();
+        $user = $this->makeRoleUser('customer', 'banned.session@example.test');
+        $user->customer->forceFill(['is_banned' => true])->save();
+
+        $this->actingAs($user)
+            ->withSession(['pre-request-marker' => 'discard-me'])
+            ->get(route('my.bookings'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('email')
+            ->assertSessionMissing('pre-request-marker');
+
+        $this->assertGuest();
+        $this->get(route('login'))->assertSee(AuthService::CUSTOMER_SUSPENDED_MESSAGE);
+    }
+
+    public function test_customer_login_works_when_the_optional_ban_column_is_absent(): void
+    {
+        $this->assertFalse(Schema::hasColumn('customers', 'is_banned'));
+        $user = $this->makeRoleUser('customer', 'no-ban-column@example.test');
+        $this->assertNull($user->customer->getAttribute('is_banned'));
+
+        $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'CorrectPassword123!',
+        ])->assertRedirect(route('my.bookings'));
+
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_register_renders_field_errors_old_values_and_never_old_passwords(): void
@@ -313,5 +367,14 @@ class AuthFlowTest extends TestCase
         }
 
         return $user;
+    }
+
+    private function addIsBannedColumn(): void
+    {
+        if (! Schema::hasColumn('customers', 'is_banned')) {
+            Schema::table('customers', function (Blueprint $table): void {
+                $table->boolean('is_banned')->default(false);
+            });
+        }
     }
 }

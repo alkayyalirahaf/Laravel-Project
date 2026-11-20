@@ -21,6 +21,14 @@ class EnsureCustomer
 
         abort_unless($this->authService->resolveRole($user) === AuthService::ROLE_CUSTOMER, 403);
 
+        if ((bool) $user->customer?->getAttribute('is_banned')) {
+            $this->authService->logout();
+
+            return redirect()->route('login')->withErrors([
+                'email' => AuthService::CUSTOMER_SUSPENDED_MESSAGE,
+            ]);
+        }
+
         return $next($request);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
@@ -13,6 +14,8 @@ class AuthService
     public const ROLE_AIRLINE_ADMIN = 'airline_admin';
 
     public const ROLE_SUPER_ADMIN = 'super_admin';
+
+    public const CUSTOMER_SUSPENDED_MESSAGE = 'Your account is suspended. Please contact support.';
 
     public function __construct(private readonly Request $request) {}
 
@@ -39,7 +42,13 @@ class AuthService
         }
 
         if ($role === self::ROLE_CUSTOMER) {
-            // TODO(Dev 1): Reject blocked customers once the blocked-status field is added to the customer profile.
+            if ((bool) $user->customer?->getAttribute('is_banned')) {
+                $this->clearAuthenticatedSession();
+
+                throw ValidationException::withMessages([
+                    'email' => self::CUSTOMER_SUSPENDED_MESSAGE,
+                ])->redirectTo(route('login'));
+            }
         }
 
         $this->request->session()->regenerate();
