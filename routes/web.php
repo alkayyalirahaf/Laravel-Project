@@ -179,16 +179,21 @@ $registerPanelRoutes = function (string $area, string $view, array $navigation) 
     $middleware = $area === 'admin' ? 'role.super-admin' : 'role.airline-admin';
     Route::middleware($middleware)->group(function () use ($area, $view, $navigation) {
         foreach ($navigation as $screen => $page) {
-            if ($area === 'admin' && in_array($screen, ['dashboard', 'countries', 'cities', 'airports', 'credits', 'bookings', 'booking'], true)) {
-                continue;
-            }
-            [$path, $title] = $page;
-
             if ($area === 'admin' && in_array($screen, [
+                'dashboard', 'countries', 'cities', 'airports', 'credits', 'bookings', 'booking',
                 'airlines', 'airline-admins', 'customers', 'reviews', 'ai-conversations', 'notifications', 'messages',
+                'flights', 'payments',
             ], true)) {
                 continue;
             }
+
+            if ($area === 'airline' && in_array($screen, [
+                'dashboard', 'flights', 'create', 'edit', 'flight', 'bookings', 'booking', 'reviews',
+            ], true)) {
+                continue;
+            }
+
+            [$path, $title] = $page;
 
             Route::view("/{$area}{$path}", $view, [
                 'area' => $area,
@@ -212,7 +217,8 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::get('/bookings/{id}', [SuperAdminBookingController::class, 'show'])->whereNumber('id')->name('booking');
     Route::get('/credits', [CreditController::class, 'index'])->name('credits');
     Route::post('/credits/{customer}', [CreditController::class, 'update'])->whereNumber('customer')->name('credits.update');
-
+    Route::get('/flights', [AdminFlightController::class, 'index'])->name('flights');
+    Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments');
     Route::resource('cities', CityController::class)->except('show')->names(['index' => 'cities']);
 
     Route::get('/airports', [AirportController::class, 'index'])->name('airports');
@@ -300,7 +306,3 @@ Route::prefix('airline')->name('airline.')->middleware('role.airline-admin')->gr
     Route::get('/reviews', [AirlineReviewController::class, 'index'])->name('reviews');
 });
 
-// 3. Super Admin Read-Only Routes (A6, A8)
-// Add inside existing Route::prefix('admin')->name('admin.')->middleware('role.super-admin')
-Route::get('/flights', [AdminFlightController::class, 'index'])->name('flights');
-Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments');
