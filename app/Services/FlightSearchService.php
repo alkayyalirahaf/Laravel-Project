@@ -104,7 +104,7 @@ class FlightSearchService
     {
         return function ($query) use ($filters) {
             $query->where('price', '>=', $filters['min_price'] ?? 0)
-                ->whereHas('seats', fn ($seats) => $seats->where('status', 'available'), '>=', (int) ($filters['passengers'] ?? 1));
+                ->whereHas('seats', fn ($seats) => $seats->availableForBooking(), '>=', (int) ($filters['passengers'] ?? 1));
 
             if (!empty($filters['cabin'])) {
                 $query->where('class', $filters['cabin']);
@@ -137,7 +137,7 @@ class FlightSearchService
             ->with(['airline', 'originAirport.city', 'destinationAirport.city',
                 'flightClasses' => function ($query) use ($classes) {
                     $classes($query);
-                    $query->withCount(['seats as available_seats_count' => fn ($seats) => $seats->where('status', 'available')]);
+                    $query->withCount(['seats as available_seats_count' => fn ($seats) => $seats->availableForBooking()]);
                 }])
             ->withMin(['flightClasses as minimum_price' => $classes], 'price');
 

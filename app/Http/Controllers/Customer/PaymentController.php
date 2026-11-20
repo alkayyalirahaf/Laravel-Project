@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Exception\ApiErrorException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class PaymentController
 {
@@ -66,6 +67,13 @@ class PaymentController
 
         try {
             $session = $paymentService->createCheckoutSession($booking, $customer);
+        } catch (HttpExceptionInterface $exception) {
+            if ($exception->getStatusCode() !== 503) {
+                throw $exception;
+            }
+
+            return redirect()->route('book.payment', ['booking_id' => $booking->getKey()])
+                ->with('status', 'Stripe Checkout is currently unavailable. Your booking is still pending.');
         } catch (ApiErrorException $exception) {
             Log::error('Stripe Checkout session creation failed.', [
                 'booking_id' => $booking->getKey(),

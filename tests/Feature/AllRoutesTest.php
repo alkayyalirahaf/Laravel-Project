@@ -30,7 +30,8 @@ class AllRoutesTest extends TestCase
             'customer' => $this->fixtures['customer']->id, 'bookingFlight' => $this->fixtures['segment']->id,
             'conversation' => $this->fixtures['conversation']->id, 'locale' => 'ar', 'path' => 'qa-missing-file',
             'airlineAdmin' => $this->fixtures['airlineUser']->airlineAdmin->id, 'review' => $this->fixtures['review']->id,
-            'message' => $this->fixtures['message']->id];
+            'message' => $this->fixtures['message']->id, 'number' => 'QA-MISSING-TICKET',
+            'city' => $this->fixtures['airport']->city_id, 'booking' => $this->fixtures['pending']->id];
         return '/'.preg_replace_callback('/\{([^}]+)\}/', fn ($m) => $params[$m[1]], $route->uri());
     }
 
@@ -44,7 +45,8 @@ class AllRoutesTest extends TestCase
             $role = in_array('role.super-admin', $middleware) ? 'admin' : (in_array('role.airline-admin', $middleware) ? 'airlineUser' : (in_array('role.customer', $middleware) ? 'user' : null));
             if ($role) $this->actingAs($this->fixtures[$role]);
             $expected = match ($route->getName()) {
-                'my.review', 'book.payment.return' => 302,
+                'my.review', 'book.payment.return', 'book.passengers', 'book.seats' => 302,
+                'book.review', 'book.confirmation', 'my.ticket' => 404,
                 'storage.local' => 403,
                 default => str_starts_with($route->uri(), 'destinations/{') ? 302 : 200,
             };
@@ -60,7 +62,7 @@ class AllRoutesTest extends TestCase
         $checked = 0;
         foreach (Route::getRoutes() as $route) {
             $middleware = $route->gatherMiddleware();
-            $role = array_values(array_intersect(['role.super-admin', 'role.airline-admin', 'role.customer', 'auth'], $middleware))[0] ?? null;
+            $role = array_values(array_intersect(['role.super-admin', 'role.airline-admin', 'role.customer', 'auth'], array_filter($middleware, 'is_string')))[0] ?? null;
             if (!$role) continue;
             $method = array_values(array_diff($route->methods(), ['HEAD']))[0];
             auth()->forgetGuards();
@@ -87,7 +89,7 @@ class AllRoutesTest extends TestCase
                 if (in_array('role.super-admin', $middleware)) $this->actingAs($this->fixtures['admin']);
                 if (in_array('role.customer', $middleware) || in_array('auth', $middleware)) $this->actingAs($this->fixtures['user']);
                 if (in_array('role.airline-admin', $middleware)) $this->actingAs($this->fixtures['airlineUser']);
-                $expected = match ($route->getName()) { 'stripe.webhook' => 400, 'storage.local.upload' => 403, default => 302 };
+                $expected = match ($route->getName()) { 'stripe.webhook' => 400, 'storage.local.upload' => 403, 'my.booking.cancel' => 409, default => 302 };
                 DB::beginTransaction();
                 try {
                     $this->call($method, $this->url($route))->assertStatus($expected);

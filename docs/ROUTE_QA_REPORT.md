@@ -112,4 +112,3 @@ GET requests use valid fixture IDs and the expected role. Mutation results below
 | POST | /stripe/webhook | stripe.webhook | 400 (invalid signature) |
 | GET/HEAD | /terms | terms | 200 |
 | GET/HEAD | /up | — | 200 |
-
