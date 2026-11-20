@@ -63,7 +63,7 @@ class FlightController
         $flight = $this->inventoryService->createFlight($airlineId, $validated, $validated['classes']);
 
         return redirect()
-            ->route('airline.flights.show', $flight)
+            ->route('airline.flight', $flight)
             ->with('success', 'Flight and seat inventory created successfully.');
     }
 
@@ -118,7 +118,7 @@ class FlightController
         $this->inventoryService->updateFlight($flight, $validated, $validated['classes']);
 
         return redirect()
-            ->route('airline.flights.show', $flight)
+            ->route('airline.flight', $flight)
             ->with('success', 'Flight updated successfully.');
     }
 
@@ -133,7 +133,7 @@ class FlightController
         $flight->delete();
 
         return redirect()
-            ->route('airline.flights.index')
+            ->route('airline.flights')
             ->with('success', 'Flight deleted successfully.');
     }
 

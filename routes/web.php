@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
+
 use App\Http\Controllers\PublicSite\DestinationController;
 use App\Http\Controllers\SuperAdmin\AirlineController;
 use App\Http\Controllers\SuperAdmin\AirlineAdminController;
@@ -172,21 +173,31 @@ $registerPanelRoutes = function (string $area, string $view, array $navigation) 
     $middleware = $area === 'admin' ? 'role.super-admin' : 'role.airline-admin';
     Route::middleware($middleware)->group(function () use ($area, $view, $navigation) {
         foreach ($navigation as $screen => $page) {
-          if ($area === 'admin' && in_array($screen, [
-    'dashboard',
-    'airlines',
-    'airline-admins',
-    'customers',
-    'countries',
-    'airports',
-    'credits',
-    'reviews',
-    'ai-conversations',
-    'notifications',
-    'messages',
-], true)) {
-    continue;
-}
+            if ($area === 'admin' && in_array($screen, [
+                'dashboard',
+                'airlines',
+                'airline-admins',
+                'customers',
+                'countries',
+                'airports',
+                'credits',
+                'reviews',
+                'ai-conversations',
+                'notifications',
+                'messages',
+            ], true)) {
+                continue;
+            }
+
+            if ($area === 'airline' && in_array($screen, [
+                'flights',
+                'create',
+                'edit',
+                'flight',
+            ], true)) {
+                continue;
+            }
+
             [$path, $title] = $page;
 
             Route::view("/{$area}{$path}", $view, [
@@ -203,7 +214,18 @@ $registerPanelRoutes = function (string $area, string $view, array $navigation) 
 $registerPanelRoutes('admin', 'super-admin.panel', $adminPages);
 $registerPanelRoutes('airline', 'airline-admin.panel', $airlinePages);
 
+Route::prefix('airline')->name('airline.')->middleware('role.airline-admin')->group(function () {
+    Route::post('/logout', [AirlineAdminSessionController::class, 'destroy'])->name('logout');
 
+    // C2, C3, C4: Flights & Seat Inventory
+    Route::get('/flights', [AirlineFlightController::class, 'index'])->name('flights.index');
+    Route::get('/flights/create', [AirlineFlightController::class, 'create'])->name('flights.create');
+    Route::post('/flights', [AirlineFlightController::class, 'store'])->name('flights.store');
+    Route::get('/flights/{flight}', [AirlineFlightController::class, 'show'])->whereNumber('flight')->name('flights.show');
+    Route::get('/flights/{flight}/edit', [AirlineFlightController::class, 'edit'])->whereNumber('flight')->name('flights.edit');
+    Route::put('/flights/{flight}', [AirlineFlightController::class, 'update'])->whereNumber('flight')->name('flights.update');
+    Route::delete('/flights/{flight}', [AirlineFlightController::class, 'destroy'])->whereNumber('flight')->name('flights.destroy');
+});
 
 Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -222,9 +244,6 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::get('/countries/{country}/edit', [CountryController::class, 'edit'])->whereNumber('country')->name('countries.edit');
     Route::put('/countries/{country}', [CountryController::class, 'update'])->whereNumber('country')->name('countries.update');
     Route::delete('/countries/{country}', [CountryController::class, 'destroy'])->whereNumber('country')->name('countries.destroy');
-
-
-
 
     // Airlines
     Route::get('/airlines', [AirlineController::class, 'index'])->name('airlines');
@@ -263,8 +282,4 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::get('/messages', [AdminContactMessageController::class, 'index'])->name('messages');
     Route::patch('/messages/{message}/handled', [AdminContactMessageController::class, 'markHandled'])->name('messages.handled');
 });
-
-
-
-
 
