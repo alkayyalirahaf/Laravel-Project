@@ -48,8 +48,6 @@ use App\Http\Controllers\AirlineAdmin\DashboardController as AirlineDashboardCon
 use App\Http\Controllers\AirlineAdmin\FlightController as AirlineFlightController;
 use App\Http\Controllers\AirlineAdmin\BookingController as AirlineBookingController;
 use App\Http\Controllers\AirlineAdmin\ReviewController as AirlineReviewController;
-use App\Http\Controllers\SuperAdmin\FlightController as AdminFlightController;
-use App\Http\Controllers\SuperAdmin\PaymentController as AdminPaymentController;
 
 
 
@@ -299,8 +297,3 @@ Route::prefix('airline')->name('airline.')->middleware('role.airline-admin')->gr
     // C6: Reviews
     Route::get('/reviews', [AirlineReviewController::class, 'index'])->name('reviews');
 });
-
-// 3. Super Admin Read-Only Routes (A6, A8)
-// Add inside existing Route::prefix('admin')->name('admin.')->middleware('role.super-admin')
-Route::get('/flights', [AdminFlightController::class, 'index'])->name('flights');
-Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments');

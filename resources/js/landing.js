@@ -274,3 +274,9 @@ for (const photo of document.querySelectorAll('[data-destination-photo]')) {
     photo.addEventListener('error', showTextCard, { once: true });
     if (photo.complete && !photo.naturalWidth) showTextCard();
 }
+
+for (const photo of document.querySelectorAll('[data-directory-photo]')) {
+    const showFallback = () => { photo.hidden = true; };
+    photo.addEventListener('error', showFallback, { once: true });
+    if (photo.complete && !photo.naturalWidth) showFallback();
+}
