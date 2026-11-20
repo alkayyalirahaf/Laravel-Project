@@ -15,7 +15,7 @@ class BookingFlowController
         $selection = $request->session()->get('dev3.search_selection');
         $counts = $selection['passenger_counts'] ?? null;
 
-        if (!$counts || empty($selection['outbound'])) {
+        if (! $counts || empty($selection['outbound'])) {
             return redirect()->route('flights.search')->withErrors([
                 'selection' => 'Select a flight and passenger counts before continuing.',
             ]);
@@ -36,7 +36,7 @@ class BookingFlowController
                 ->with(['flight.originAirport', 'flight.destinationAirport'])
                 ->first();
 
-            if (!$cabin) {
+            if (! $cabin) {
                 return redirect()->route('flights.search')->withErrors([
                     'selection' => 'A selected flight or cabin is no longer available. Please search again.',
                 ]);
@@ -67,9 +67,18 @@ class BookingFlowController
         }
 
         $lastDeparture = collect($cabins)->max(fn ($cabin) => $cabin->flight->departure_at->toDateString());
-        $validator = Validator::make($request->all(), [
+        $input = $request->all();
+        if (is_array($input['passengers'] ?? null)) {
+            foreach ($input['passengers'] as $index => $passenger) {
+                if (is_array($passenger) && array_key_exists('filled_by_ai', $passenger)) {
+                    $input['passengers'][$index]['filled_by_ai'] = in_array($passenger['filled_by_ai'], [true, 1, '1'], true);
+                }
+            }
+        }
+
+        $validator = Validator::make($input, [
             'passengers' => ['required', 'array', 'list', 'size:'.count($travelerTypes)],
-            'passengers.*' => ['required', 'array:first_name,last_name,date_of_birth,gender,nationality,passport_number,passport_country,passport_expiry,special_assistance'],
+            'passengers.*' => ['required', 'array:first_name,last_name,date_of_birth,gender,nationality,passport_number,passport_country,passport_expiry,special_assistance,filled_by_ai'],
             'passengers.*.first_name' => ['required', 'string', 'max:100'],
             'passengers.*.last_name' => ['required', 'string', 'max:100'],
             'passengers.*.date_of_birth' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
@@ -79,6 +88,7 @@ class BookingFlowController
             'passengers.*.passport_country' => ['required', 'string', 'max:60'],
             'passengers.*.passport_expiry' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.$lastDeparture],
             'passengers.*.special_assistance' => ['nullable', 'string', 'max:255'],
+            'passengers.*.filled_by_ai' => ['nullable', 'boolean'],
             'contact_email' => ['required', 'email', 'max:255'],
             'contact_phone' => ['nullable', 'string', 'max:30'],
         ]);
@@ -89,6 +99,7 @@ class BookingFlowController
 
         $details = $validator->validated();
         foreach ($details['passengers'] as $index => &$passenger) {
+            $passenger['filled_by_ai'] = $passenger['filled_by_ai'] ?? false;
             $passenger['type'] = $travelerTypes[$index];
         }
         unset($passenger);

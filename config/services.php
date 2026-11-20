@@ -43,4 +43,9 @@ return [
         'jod_rate' => env('STRIPE_JOD_TO_USD_RATE', 1.41044),
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL') ?: 'gemini-2.5-flash',
+    ],
+
 ];
