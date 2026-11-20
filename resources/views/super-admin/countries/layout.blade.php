@@ -1,20 +1,7 @@
-@extends('layouts.app')
+@extends('super-admin.management-layout')
 
-@section('title', 'Countries')
-
-@section('content')
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <section class="container py-4">
-        <h1>Countries</h1>
-        @if($errors->any())
-            <div class="alert alert-danger" role="alert">
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-        @yield('countries-content')
-    </section>
+@section('admin-title', 'Countries')
+@section('admin-content')
+    <h1>Countries</h1>
+    @yield('countries-content')
 @endsection

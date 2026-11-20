@@ -3,24 +3,37 @@
 @section('title', __('Destinations'))
 @section('body-class', 'landing')
 
-@php
-    $catalog = json_decode(file_get_contents(resource_path('views/shared/destination-catalog.json')), true, flags: JSON_THROW_ON_ERROR);
-@endphp
-
 @section('content')
 <div class="landing-wrap destination-directory">
     <h1>{{ __('Explore destinations') }}</h1>
-    @foreach($catalog as $category)
+    @forelse($countries as $country)
         <section class="directory-section">
-            <h2>{{ __($category['title']) }}</h2>
-            <div class="directory-grid">
-                @foreach($category['places'] as $place)
-                    <x-destination-card :place="$place"
-                        :local-image="is_file(public_path('assets/landing/catalog/' . strtolower($place['code']) . '.webp'))"
-                        translate-labels />
-                @endforeach
-            </div>
+            <h2>{{ $country->name }}</h2>
+            @if($country->cities->isEmpty())
+                <p>No city information is available yet.</p>
+            @else
+                <div class="directory-grid">
+                    @foreach($country->cities as $city)
+                        <article class="panel">
+                            <h3>{{ $city->name }}</h3>
+                            @if($city->best_season)<p><strong>Best season:</strong> {{ $city->best_season }}</p>@endif
+                            @if($city->airport_transport)<p><strong>Airport transport:</strong> {{ $city->airport_transport }}</p>@endif
+                            @if($city->tips)<p><strong>Travel tips:</strong> {{ $city->tips }}</p>@endif
+                            @if($city->airports->isNotEmpty())
+                                <h4>Airports</h4>
+                                <ul>
+                                    @foreach($city->airports as $airport)
+                                        <li>{{ $airport->name }} ({{ $airport->code }})</li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </article>
+                    @endforeach
+                </div>
+            @endif
         </section>
-    @endforeach
+    @empty
+        <p>Destination information will be available soon.</p>
+    @endforelse
 </div>
 @endsection
