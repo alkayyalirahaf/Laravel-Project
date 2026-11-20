@@ -255,8 +255,3 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
 });
 
 
-use App\Http\Controllers\Customer\PassportScanController;
-
-Route::post('/book/passport-scan', PassportScanController::class)
-    ->middleware(['role.customer', 'throttle:10,1'])
-    ->name('book.passport-scan');
