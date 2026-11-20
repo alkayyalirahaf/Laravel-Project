@@ -44,10 +44,16 @@
             @endforeach
         </select>
     </div>
-    <div class="col-md-3">
-        <label class="form-label" for="passengers">Seats needed</label>
-        <input class="form-control" type="number" id="passengers" name="passengers" min="1" max="9" value="{{ old('passengers', $filters['passengers'] ?? 1) }}" required>
-    </div>
+    @foreach(['adults' => 'Adults', 'youth' => 'Youth', 'children' => 'Children', 'infants' => 'Infants'] as $name => $label)
+        <div class="col-md-3">
+            <label class="form-label" for="{{ $name }}">{{ $label }}</label>
+            <input class="form-control" type="number" id="{{ $name }}" name="{{ $name }}"
+                   min="{{ $name === 'adults' ? 1 : 0 }}" max="{{ $name === 'infants' ? 0 : 9 }}"
+                   value="{{ old($name, $filters[$name] ?? ($name === 'adults' ? 1 : 0)) }}" required
+                   @if($name === 'infants') readonly aria-describedby="infant-policy-note" @endif>
+        </div>
+    @endforeach
+    <p id="infant-policy-note" class="text-muted">Up to 9 seats per search. Infant searches are unavailable until infant seat rules are confirmed.</p>
     @foreach(['min_price' => 'Minimum base fare', 'budget' => 'Maximum base fare'] as $name => $label)
         <div class="col-md-3">
             <label class="form-label" for="{{ $name }}">{{ $label }}</label>
