@@ -26,7 +26,7 @@ class AiConversationController
         $cities = City::orderBy('name')->get();
         $filters = [];
 
-        return view('omar.assistant.index', compact('conversations', 'available', 'airports', 'cities', 'filters'));
+        return view('pages.assistant', compact('conversations', 'available', 'airports', 'cities', 'filters'));
     }
 
     public function store(Request $request, AiService $ai, FlightSearchService $search)
@@ -130,6 +130,6 @@ class AiConversationController
         $transcript = json_decode($contents, true);
         abort_unless(is_array($transcript) && isset($transcript['message'], $transcript['tips'], $transcript['flights']), 404);
 
-        return view('omar.assistant.show', compact('conversation', 'transcript'));
+        return view('customer.assistant.show', compact('conversation', 'transcript'));
     }
 }

@@ -1,42 +1,29 @@
 @extends('layouts.app')
 
-@php
-    $demoFlights = require resource_path('views/shared/demo-flights.php');
-@endphp
-@php
-    $flight = $demoFlights->firstWhere('id', (int) request()->route('flight'));
-    $preferredCabin = request()->query('cabin');
-    $fares = $flight['fares'] ?? [];
-    if (is_string($preferredCabin) && isset($fares[$preferredCabin])) {
-        $fares = [$preferredCabin => $fares[$preferredCabin]] + $fares;
-    }
-@endphp
-
-@section('title'){{ $title }}@endsection
+@section('title', 'Flight details')
 
 @section('content')
-<h1>{{ $title }}</h1>
-@if($flight)
-    <p class="notice">Sample flight and fares</p>
-    <div class="panel">
-        <span class="badge">{{ $flight['number'] }}</span>
-        <h2 class="section">{{ $flight['origin'] }} → {{ $flight['destination'] }}</h2>
-        <p>{{ $flight['departure'] }} → {{ $flight['arrival'] }} · {{ $flight['duration'] }}</p>
+<h1>{{ $flight->flight_number }}</h1>
+<div class="panel">
+    <span class="badge">{{ $flight->airline->name }} · {{ ucfirst($flight->status) }}</span>
+    <h2 class="section">{{ $flight->originAirport->name }} ({{ $flight->originAirport->code }}) → {{ $flight->destinationAirport->name }} ({{ $flight->destinationAirport->code }})</h2>
+    <p>{{ $flight->departure_at->format('Y-m-d H:i') }} → {{ $flight->arrival_at->format('Y-m-d H:i') }} · {{ (int) $flight->departure_at->diffInMinutes($flight->arrival_at) }} minutes</p>
+    <p>Times use {{ config('app.timezone') }}. Prices are per-seat base fares.</p>
+</div>
+<section class="section">
+    <h2>Available cabins</h2>
+    <div class="cards">
+        @forelse($flight->flightClasses as $class)
+            <article class="panel stack">
+                <h3>{{ ucfirst($class->class) }}</h3><p>JOD {{ $class->price }}</p>
+                <p>{{ $class->cabin_baggage_kg }} kg cabin · {{ $class->checked_baggage_kg }} kg checked</p>
+                <p>{{ $class->available_seats_count }} seats available</p>
+                <a class="button secondary" href="{{ route('flights.search', array_merge(session('dev3.search_filters', []), ['cabin' => $class->class])) }}">Search and select this cabin</a>
+            </article>
+        @empty
+            <p class="panel">No cabins have been published.</p>
+        @endforelse
     </div>
-    <section class="section">
-        <h2>Choose a cabin</h2>
-        <div class="cards">
-            @foreach($fares as $class => [$price, $cabin, $checked])
-                <article class="panel">
-                    <h3>{{ ucfirst($class) }}</h3><p>JOD {{ $price }}</p><p>{{ $cabin }} kg cabin · {{ $checked }} kg checked</p>
-                    @if($class === $preferredCabin)<p class="badge">Your searched cabin</p>@endif
-                    <a class="button" href="{{ route('book.passengers', ['flight' => $flight['id'], 'class' => $class]) }}">Continue with {{ $class }}</a>
-                </article>
-            @endforeach
-        </div>
-    </section>
-    <section class="section"><h2>Traveler reviews</h2><p class="panel">No published reviews for this sample flight.</p></section>
-@else
-    <p class="panel">This flight is not available in the preview. <a href="{{ route('flights.search') }}">Browse flights</a></p>
-@endif
+</section>
+<a class="button secondary section" href="{{ route('flights.search', session('dev3.search_filters', [])) }}">Back to results and select a cabin</a>
 @endsection

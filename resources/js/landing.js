@@ -82,7 +82,7 @@ if (form) {
         for (const field of travelers) {
             const stepper = field.closest('[data-traveler-counter]');
             stepper.querySelector('[data-step="-1"]').disabled = field.value === field.min;
-            stepper.querySelector('[data-step="1"]').disabled = field.value === field.max;
+            stepper.querySelector('[data-step="1"]').disabled = field.value === field.max || count >= 9;
         }
         form.querySelector('[data-traveler-summary]').textContent = count === 1
             ? form.dataset.travelerOne

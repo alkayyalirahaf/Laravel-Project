@@ -39,7 +39,9 @@
     </header>
     <main id="main" class="wrap main">
         @if(session('status')) <p class="notice" role="status">{{ session('status') }}</p> @endif
-        @if(isset($errors) && $errors->any()) <p class="notice error" role="alert">{{ __('Check the highlighted fields and try again.') }}</p> @endif
+        @if(isset($errors) && $errors->any())
+            <div class="notice error" role="alert"><p>{{ __('Check the highlighted fields and try again.') }}</p><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+        @endif
         @if(!empty($area))
             <nav class="subnav" aria-label="{{ $area === 'my' ? 'Your account' : 'Management' }}">
                 @php

@@ -47,6 +47,25 @@ class StripePaymentFlowTest extends TestCase
         $this->assertDatabaseCount('payments', 0);
         $this->assertSame('pending', $booking->fresh()->status);
         $this->assertNotNull($customerUser);
+        $this->assertSame('0.00', $customer->fresh()->credit_balance);
+        $this->assertDatabaseCount('credit_transactions', 1);
+        $this->assertNull($paymentService->createCheckoutSession($booking, $customer));
+        $this->assertDatabaseCount('credit_transactions', 1);
+    }
+
+    public function test_checkout_rejects_unfunded_credit_usage_without_creating_payment(): void
+    {
+        [, $customer, $booking] = $this->makeCustomerAndBooking(total: '12.00', creditsUsed: '12.00');
+        $customer->update(['credit_balance' => '1.00']);
+        try {
+            (new PaymentService(new StripeClient('sk_test_mock')))->createCheckoutSession($booking, $customer);
+            $this->fail('Unfunded credits were accepted.');
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            $this->assertArrayHasKey('amount', $exception->errors());
+        }
+        $this->assertSame('1.00', $customer->fresh()->credit_balance);
+        $this->assertDatabaseCount('credit_transactions', 0);
+        $this->assertDatabaseCount('payments', 0);
     }
 
     public function test_success_webhook_marks_payment_once_when_the_event_is_repeated(): void
@@ -197,7 +216,7 @@ class StripePaymentFlowTest extends TestCase
         ]);
         $customer = Customer::create([
             'user_id' => $user->id,
-            'credit_balance' => '0.00',
+            'credit_balance' => $creditsUsed,
         ]);
         $booking = Booking::create([
             'code' => sprintf('BK%010d', Booking::count() + 1),

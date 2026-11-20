@@ -10,12 +10,27 @@ use Illuminate\Validation\ValidationException;
 
 class ReviewController
 {
+    public function forBooking(Request $request, string $code)
+    {
+        $customer = $request->user()?->customer;
+        abort_unless($customer, 403);
+        $booking = $customer->bookings()->where('code', $code)->firstOrFail();
+        $segments = $booking->bookingFlights()->with('flight', 'booking')->get();
+        $segment = $segments->first(fn ($segment) => $booking->status === 'completed'
+            && $segment->flight->status === 'completed' && $segment->flight->arrival_at->isPast()
+            && !$segment->reviews()->where('customer_id', $customer->id)->exists());
+        if (!$segment) {
+            throw ValidationException::withMessages(['review' => 'No completed, unreviewed flight is available in this booking.']);
+        }
+        return redirect()->route('my.reviews.create', $segment->id);
+    }
+
     public function create(Request $request, int $bookingFlight)
     {
         $segment = $this->ownedSegment($request, $bookingFlight);
         $this->checkEligibility($segment);
 
-        return view('omar.reviews.create', compact('segment'));
+        return view('customer.account', ['screen' => 'review', 'title' => 'Write a review', 'segment' => $segment]);
     }
 
     public function store(Request $request, int $bookingFlight)

@@ -26,6 +26,6 @@ class DashboardController
         $recentBookings = Booking::with('customer.user')->latest('id')->limit(10)->get();
         $recentPayments = Payment::with('booking')->latest('id')->limit(10)->get();
 
-        return view('omar.admin.dashboard', compact('statistics', 'recentBookings', 'recentPayments'));
+        return view('super-admin.panel', array_merge(compact('statistics', 'recentBookings', 'recentPayments'), ['area' => 'admin', 'screen' => 'dashboard', 'title' => 'Super Admin Dashboard']));
     }
 }

@@ -27,6 +27,6 @@ class CompareController
             }
         }
 
-        return view('omar.flights.compare', compact('flights'));
+        return view('flights.compare', compact('flights'));
     }
 }
