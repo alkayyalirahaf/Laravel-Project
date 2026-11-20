@@ -8,6 +8,9 @@
     </form>
     @if($flights !== null)
         <h2>{{ $filters['leg'] === 'return' ? 'Return flights' : 'Outbound flights' }}</h2>
+        @if(!isset($filters['adults']))
+            <p class="alert alert-info">Choose the adult, youth and child counts in the search form and search again before selecting flights.</p>
+        @endif
         @if($filters['leg'] === 'return')
             <a href="{{ route('flights.search', array_diff_key(array_merge($filters, ['leg' => 'outbound']), ['outbound_class_id' => true])) }}">Change outbound selection</a>
         @endif
@@ -21,6 +24,7 @@
                 @foreach($flight->flightClasses as $class)
                     <div class="border-top pt-2 mt-2">
                         <p>{{ ucfirst($class->class) }} — Base fare {{ $class->price }} — {{ $class->available_seats_count }} seats available</p>
+                        @if(isset($filters['adults']))
                         @if($filters['trip'] === 'round_trip' && $filters['leg'] === 'outbound')
                             <a class="btn btn-outline-primary" href="{{ route('flights.search', array_merge($filters, ['leg' => 'return', 'outbound_class_id' => $class->id])) }}">Select outbound and find return</a>
                         @else
@@ -33,6 +37,7 @@
                                 @if($filters['leg'] === 'return')<input type="hidden" name="return_class_id" value="{{ $class->id }}">@endif
                                 <button class="btn btn-primary" type="submit">Confirm flight selection</button>
                             </form>
+                        @endif
                         @endif
                     </div>
                 @endforeach

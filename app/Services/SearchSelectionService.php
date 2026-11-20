@@ -10,6 +10,18 @@ class SearchSelectionService
     public function select(array $input, FlightSearchService $search): array
     {
         $filters = $search->validateFilters(array_merge($input, ['leg' => 'outbound']));
+        if (!isset($filters['adults'])) {
+            throw ValidationException::withMessages([
+                'adults' => 'Choose the adult, youth and child counts and search again before selecting flights.',
+            ]);
+        }
+
+        $passengerCounts = [
+            'adults' => $filters['adults'],
+            'youth' => $filters['youth'],
+            'children' => $filters['children'],
+            'infants' => $filters['infants'],
+        ];
         $ids = Validator::make($input, [
             'outbound_class_id' => ['required', 'integer', 'min:1'],
             'return_class_id' => [$filters['trip'] === 'round_trip' ? 'required' : 'prohibited', 'integer', 'min:1', 'different:outbound_class_id'],
@@ -25,6 +37,7 @@ class SearchSelectionService
 
         return [
             'trip' => $filters['trip'], 'passengers' => (int) $filters['passengers'],
+            'passenger_counts' => $passengerCounts,
             'filters' => $filters, 'outbound' => $outbound, 'return' => $return,
         ];
     }

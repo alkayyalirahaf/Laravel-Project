@@ -40,7 +40,7 @@ class OmarMergeReviewTest extends TestCase
 
         $this->assertSame('one_way', $filters['trip']);
         $this->assertSame(5, $filters['passengers']);
-        $this->assertSame('2', $filters['adults']);
+        $this->assertSame(2, $filters['adults']);
         $this->assertSame($filters, (new FlightSearchService)->validateFilters($filters));
     }
 

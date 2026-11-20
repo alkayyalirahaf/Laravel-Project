@@ -39,7 +39,12 @@ class FlightSearchService
             if (isset($travelers['passengers']) && (int) $travelers['passengers'] !== $seatsNeeded) {
                 throw ValidationException::withMessages(['passengers' => 'Seat count must match the submitted traveler counts.']);
             }
-            unset($travelers['passengers']);
+            $travelers = [
+                'adults' => (int) $travelers['adults'],
+                'youth' => (int) ($travelers['youth'] ?? 0),
+                'children' => (int) ($travelers['children'] ?? 0),
+                'infants' => (int) ($travelers['infants'] ?? 0),
+            ];
             $input['passengers'] = $seatsNeeded;
         }
 
