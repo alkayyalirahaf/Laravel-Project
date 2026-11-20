@@ -126,7 +126,7 @@ class OmarDiscoveryTest extends TestCase
 
     public function test_selection_rejects_missing_outbound_and_duplicate_return_cabins(): void
     {
-        foreach ([[], ['trip' => 'round_trip', 'return' => now()->addDays(9)->toDateString(), 'outbound_class_id' => 5, 'return_class_id' => 5]] as $changes) {
+        foreach ([['adults' => 1], ['adults' => 1, 'trip' => 'round_trip', 'return' => now()->addDays(9)->toDateString(), 'outbound_class_id' => 5, 'return_class_id' => 5]] as $changes) {
             try {
                 (new SearchSelectionService)->select($this->filters($changes), new FlightSearchService);
                 $this->fail('Invalid selection was accepted.');
@@ -154,11 +154,68 @@ class OmarDiscoveryTest extends TestCase
         $selection = (new SearchSelectionService)->select($this->filters([
             'trip' => 'round_trip', 'return' => now()->addDays(9)->toDateString(),
             'outbound_class_id' => 20, 'return_class_id' => 21, 'price' => '0.01',
+            'adults' => '1', 'youth' => '1', 'children' => '1', 'infants' => '0',
+            'passenger_counts' => ['adults' => 99],
         ]), $search);
 
         $this->assertSame(['flight_id' => 10, 'flight_class_id' => 20, 'price' => '150.25'], $selection['outbound']);
         $this->assertSame(['flight_id' => 11, 'flight_class_id' => 21, 'price' => '180.50'], $selection['return']);
         $this->assertArrayNotHasKey('price', $selection['filters']);
+        $this->assertSame(['adults' => 1, 'youth' => 1, 'children' => 1, 'infants' => 0], $selection['passenger_counts']);
+        $this->assertSame(3, $selection['passengers']);
+    }
+
+    public function test_selection_rejects_total_only_search_instead_of_inventing_age_groups(): void
+    {
+        $search = Mockery::mock(FlightSearchService::class)->makePartial();
+        $search->shouldNotReceive('query');
+
+        try {
+            (new SearchSelectionService)->select($this->filters(['passengers' => 3, 'outbound_class_id' => 20]), $search);
+            $this->fail('Unknown age groups were accepted for booking handoff.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('adults', $exception->errors());
+        }
+    }
+
+    public function test_one_way_selection_always_contains_four_integer_counts_and_null_return(): void
+    {
+        $search = Mockery::mock(FlightSearchService::class)->makePartial();
+        $flight = new Flight;
+        $flight->id = 10;
+        $class = new FlightClass(['price' => '150.25']);
+        $class->id = 20;
+        $flight->setRelation('flightClasses', collect([$class]));
+        $query = Mockery::mock(\Illuminate\Database\Eloquent\Builder::class);
+        $query->shouldReceive('whereHas')->once()->andReturnSelf();
+        $query->shouldReceive('first')->once()->andReturn($flight);
+        $search->shouldReceive('query')->once()->withArgs(fn ($filters) => $filters['passengers'] === 2)->andReturn($query);
+
+        $selection = (new SearchSelectionService)->select($this->filters(['adults' => '2', 'outbound_class_id' => 20]), $search);
+
+        $this->assertSame(['adults' => 2, 'youth' => 0, 'children' => 0, 'infants' => 0], $selection['passenger_counts']);
+        $this->assertSame('one_way', $selection['trip']);
+        $this->assertSame(2, $selection['passengers']);
+        $this->assertNull($selection['return']);
+    }
+
+    public function test_selection_controller_saves_the_breakdown_under_the_existing_session_key(): void
+    {
+        $selection = [
+            'trip' => 'one_way', 'passengers' => 2,
+            'passenger_counts' => ['adults' => 1, 'youth' => 0, 'children' => 1, 'infants' => 0],
+            'outbound' => ['flight_id' => 10, 'flight_class_id' => 20, 'price' => '150.25'],
+            'return' => null, 'filters' => [],
+        ];
+        $service = Mockery::mock(SearchSelectionService::class);
+        $service->shouldReceive('select')->once()->andReturn($selection);
+        $request = Request::create('/flights/selection', 'POST');
+        $request->setLaravelSession(app('session')->driver());
+
+        $view = (new \App\Http\Controllers\PublicFlightController)->select($request, $service, new FlightSearchService);
+
+        $this->assertSame($selection, $request->session()->get('dev3.search_selection'));
+        $this->assertSame($selection, $view->getData()['selection']);
     }
 
     public function test_compare_rejects_duplicates_invalid_ids_and_more_than_three(): void
