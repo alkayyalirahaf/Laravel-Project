@@ -524,7 +524,7 @@ class HostedStripeCheckoutTest extends TestCase
         ]);
         $customer = Customer::create([
             'user_id' => $user->id,
-            'credit_balance' => '0.00',
+            'credit_balance' => $creditsUsed,
         ]);
         $booking = Booking::create([
             'code' => sprintf('CS%010d', Booking::count() + 1),

@@ -1,17 +1,15 @@
 @extends('layouts.app')
-
-@section('title'){{ $title }}@endsection
-
+@section('title', 'Booking lookup')
 @section('content')
-<div class="narrow">
-    <h1>{{ $title }}</h1>
-    <p>Try booking code <strong>YTDEMO</strong> and last name <strong>Traveler</strong>. Use sample details only.</p>
-    <form method="post" class="panel stack" data-preview-form data-lookup>
-        <x-travel-field name="code" label="Booking code" maxlength="12" required />
-        <x-travel-field name="last_name" label="Passenger’s last name" required />
-        <button class="button" disabled>Find sample booking</button>
-        <p data-preview-status role="status"></p>
-        <a data-lookup-result href="{{ route('my.booking', 'YTDEMO') }}" hidden>Open sample booking</a>
+<h1>Booking lookup</h1>
+@if(auth()->user()?->customer)
+    <form class="panel narrow stack" method="POST" action="{{ route('booking.lookup.search') }}">
+        @csrf
+        <x-travel-field name="code" label="Booking reference" required maxlength="12" />
+        <div><button class="button">Find booking</button></div>
     </form>
-</div>
+@else
+    <p>Sign in to find a booking in your account.</p>
+    <a class="button" href="{{ route('login') }}">Sign in</a>
+@endif
 @endsection

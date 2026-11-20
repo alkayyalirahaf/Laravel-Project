@@ -1,7 +1,3 @@
-@extends('super-admin.management-layout')
-
-@section('admin-title', 'Dashboard')
-@section('admin-content')
     <p class="eyebrow mb-2">Platform overview</p>
     <h1>Super Admin Dashboard</h1>
     <div class="row g-3 mb-4">
@@ -10,7 +6,7 @@
         @endforeach
     </div>
     <h2>Recent bookings</h2>
-    <div class="table-responsive"><table class="table table-striped">
+    <div class="table-wrap panel section"><table class="table table-striped">
         <thead><tr><th>Booking</th><th>Customer</th><th>Status</th><th>Created</th></tr></thead><tbody>
         @forelse($recentBookings as $booking)
             <tr><td>{{ $booking->code }}</td><td>{{ $booking->customer->user->name }}</td><td>{{ $booking->status }}</td><td>{{ $booking->created_at?->format('Y-m-d H:i') }}</td></tr>
@@ -25,4 +21,3 @@
         @empty<tr><td colspan="5">No payments yet.</td></tr>@endforelse
         </tbody>
     </table></div>
-@endsection

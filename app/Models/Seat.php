@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -21,6 +22,12 @@ class Seat extends Model
         return [
             'held_until' => 'datetime',
         ];
+    }
+
+    public function scopeAvailableForBooking(Builder $query): Builder
+    {
+        return $query->where(fn ($query) => $query->where('status', 'available')
+            ->orWhere(fn ($query) => $query->where('status', 'held')->where('held_until', '<=', now())));
     }
 
     public function flightClass(): BelongsTo

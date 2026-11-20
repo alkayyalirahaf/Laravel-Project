@@ -12,15 +12,25 @@
 @section('content')
 <p class="eyebrow">{{ $area === 'airline' ? 'Airline desk' : 'Platform administration' }}</p>
 <h1>{{ $title }}</h1>
-<p class="notice">Staff interface preview. No live records or management actions are connected.</p>
+@unless(isset($statistics) || isset($transactions))<p class="notice">Staff interface preview. No live records or management actions are connected.</p>@endunless
+@if($area === 'admin')
+    <nav class="actions section" aria-label="Administration"><a class="button secondary" href="{{ route('admin.dashboard') }}">Dashboard</a><a class="button secondary" href="{{ route('admin.countries') }}">Countries</a><a class="button secondary" href="{{ route('admin.credits') }}">Credits</a></nav>
+@endif
 @switch($screen)
+    @case('credits')
+        @include('super-admin.credits.content')
+        @break
     @case('dashboard')
+        @if(isset($statistics))
+            @include('super-admin.dashboard.content')
+        @else
         <div class="cards">
             @foreach(['Flights' => '24', 'Upcoming flights' => '8', 'Bookings' => '136', $area === 'airline' ? 'Seats sold' : 'Airlines awaiting approval' => $area === 'airline' ? '68%' : '2'] as $label => $value)
                 <article class="panel"><p>{{ $label }}</p><h2>{{ $value }}</h2></article>
             @endforeach
         </div>
         <div class="actions section"><a class="button" href="{{ route("$area.flights") }}">View flights</a><a class="button secondary" href="{{ route("$area.bookings") }}">View bookings</a></div>
+        @endif
         @break
     @case('booking')
         <x-booking-summary />
