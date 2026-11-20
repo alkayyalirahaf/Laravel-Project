@@ -1,16 +1,14 @@
-@extends('omar.layout', ['title' => 'Super Admin Dashboard'])
+@extends('super-admin.management-layout')
 
-@section('omar-content')
+@section('admin-title', 'Dashboard')
+@section('admin-content')
+    <p class="eyebrow mb-2">Platform overview</p>
     <h1>Super Admin Dashboard</h1>
     <div class="row g-3 mb-4">
         @foreach($statistics as $label => $count)
-            <div class="col-md-4"><article class="card card-body"><h2 class="h6">{{ $label }}</h2><p class="fs-3 mb-0">{{ number_format($count) }}</p></article></div>
+            <div class="col-6 col-xl-4"><article class="card card-body admin-stat-card h-100"><h2 class="h6">{{ $label }}</h2><p class="fs-3 mb-0">{{ number_format($count) }}</p></article></div>
         @endforeach
     </div>
-    <nav class="mb-3">
-        <a class="btn btn-outline-primary" href="{{ route('admin.countries') }}">Manage countries</a>
-        <a class="btn btn-outline-primary" href="{{ route('admin.credits') }}">View credits</a>
-    </nav>
     <h2>Recent bookings</h2>
     <div class="table-responsive"><table class="table table-striped">
         <thead><tr><th>Booking</th><th>Customer</th><th>Status</th><th>Created</th></tr></thead><tbody>
@@ -19,7 +17,7 @@
         @empty<tr><td colspan="4">No bookings yet.</td></tr>@endforelse
         </tbody>
     </table></div>
-    <h2>Recent payments</h2>
+    <h2 class="mt-4">Recent payments</h2>
     <div class="table-responsive"><table class="table table-striped">
         <thead><tr><th>Payment</th><th>Booking</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead><tbody>
         @forelse($recentPayments as $payment)
