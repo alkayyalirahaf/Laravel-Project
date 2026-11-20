@@ -106,7 +106,7 @@ class Dev3FlowTest extends TestCase
         $admin->superAdmin()->create([]);
         $this->actingAs($admin);
         $data = ['name' => 'Jordan', 'code' => 'jo', 'currency' => 'JOD', 'language' => 'Arabic'];
-        $this->get(route('admin.countries.create'))->assertOk()->assertDontSee('bootstrap.min.css');
+        $this->get(route('admin.countries.create'))->assertOk()->assertSee('Super Admin navigation');
         $this->post(route('admin.countries.store'), $data)->assertRedirect(route('admin.countries'));
         $country = Country::firstOrFail();
         $this->assertSame('JO', $country->code);

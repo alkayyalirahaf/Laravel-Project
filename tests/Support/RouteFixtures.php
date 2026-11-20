@@ -51,6 +51,10 @@ class RouteFixtures
             'flights' => [], 'recorded_at' => now()->toIso8601String(), 'timezone' => config('app.timezone')]));
         $conversation = $customer->aiConversations()->create(['type' => 'tips', 'title' => 'QA saved conversation', 'file_path' => $file]);
 
-        return compact('admin', 'user', 'airlineUser', 'customer', 'country', 'airport', 'destination', 'booking', 'pending', 'segment', 'conversation', 'flights');
+        $reviewSegment = $booking->bookingFlights()->create(['flight_id' => $flights[3]->id,
+            'flight_class_id' => $flights[3]->flightClasses()->first()->id, 'direction' => 'outbound']);
+        $review = $reviewSegment->reviews()->create(['customer_id' => $customer->id, 'rating' => 5, 'comment' => 'QA review', 'status' => 'hidden']);
+        $message = \App\Models\ContactMessage::create(['name' => 'QA', 'email' => 'qa@example.test', 'type' => 'question', 'message' => 'QA message', 'status' => 'new']);
+        return compact('admin', 'user', 'airlineUser', 'customer', 'country', 'airport', 'destination', 'booking', 'pending', 'segment', 'conversation', 'flights', 'review', 'message');
     }
 }

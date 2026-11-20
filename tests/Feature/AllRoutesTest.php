@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\{Route, Http, Storage};
+use Illuminate\Support\Facades\{Route, Http, Storage, DB};
 use Tests\Support\RouteFixtures;
 use Tests\TestCase;
 
@@ -28,7 +28,9 @@ class AllRoutesTest extends TestCase
         $params = ['id' => 1, 'code' => $this->fixtures['booking']->code, 'flight' => $this->fixtures['flights'][0]->id,
             'country' => $this->fixtures['country']->id, 'airport' => $this->fixtures['airport']->id,
             'customer' => $this->fixtures['customer']->id, 'bookingFlight' => $this->fixtures['segment']->id,
-            'conversation' => $this->fixtures['conversation']->id, 'locale' => 'ar', 'path' => 'qa-missing-file'];
+            'conversation' => $this->fixtures['conversation']->id, 'locale' => 'ar', 'path' => 'qa-missing-file',
+            'airlineAdmin' => $this->fixtures['airlineUser']->airlineAdmin->id, 'review' => $this->fixtures['review']->id,
+            'message' => $this->fixtures['message']->id];
         return '/'.preg_replace_callback('/\{([^}]+)\}/', fn ($m) => $params[$m[1]], $route->uri());
     }
 
@@ -77,15 +79,21 @@ class AllRoutesTest extends TestCase
     public function test_every_mutating_route_handles_invalid_input_without_server_errors(): void
     {
         foreach (Route::getRoutes() as $route) {
-            foreach (array_intersect(['POST', 'PUT', 'DELETE'], $route->methods()) as $method) {
+            foreach (array_intersect(['POST', 'PUT', 'PATCH', 'DELETE'], $route->methods()) as $method) {
                 // RedirectController matches all verbs; GET is checked above.
                 if (str_starts_with($route->uri(), 'destinations/{')) continue;
                 auth()->forgetGuards();
                 $middleware = $route->gatherMiddleware();
                 if (in_array('role.super-admin', $middleware)) $this->actingAs($this->fixtures['admin']);
                 if (in_array('role.customer', $middleware) || in_array('auth', $middleware)) $this->actingAs($this->fixtures['user']);
+                if (in_array('role.airline-admin', $middleware)) $this->actingAs($this->fixtures['airlineUser']);
                 $expected = match ($route->getName()) { 'stripe.webhook' => 400, 'storage.local.upload' => 403, default => 302 };
-                $this->call($method, $this->url($route))->assertStatus($expected);
+                DB::beginTransaction();
+                try {
+                    $this->call($method, $this->url($route))->assertStatus($expected);
+                } finally {
+                    DB::rollBack();
+                }
             }
         }
     }

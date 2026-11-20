@@ -12,6 +12,11 @@ class AirlineController
     // Display airlines with search, status filter, and pagination
     public function index(Request $request)
     {
+        $request->validate([
+            'search' => ['nullable', 'string', 'max:150'],
+            'status' => ['nullable', Rule::in(['pending', 'active', 'suspended'])],
+        ]);
+
         $query = Airline::query();
 
         // Search by airline name or code
@@ -40,12 +45,18 @@ class AirlineController
     // Display the form for creating a new airline
     public function create()
     {
-        return view('super-admin.airlines.create');
+        return view('super-admin.airlines.create', ['airline' => new Airline()]);
     }
 
     // Validate and store a new airline
     public function store(Request $request)
     {
+        $request->merge([
+            'name' => is_string($request->name) ? trim($request->name) : $request->name,
+            'code' => is_string($request->code) ? strtoupper(trim($request->code)) : $request->code,
+            'country' => is_string($request->country) ? trim($request->country) : $request->country,
+        ]);
+
         // Validate the submitted airline data
         $validated = $request->validate([
             'name' => 'required|string|max:150',
@@ -81,6 +92,12 @@ class AirlineController
     public function update(Request $request, $id)
     {
         $airline = Airline::findOrFail($id);
+
+        $request->merge([
+            'name' => is_string($request->name) ? trim($request->name) : $request->name,
+            'code' => is_string($request->code) ? strtoupper(trim($request->code)) : $request->code,
+            'country' => is_string($request->country) ? trim($request->country) : $request->country,
+        ]);
 
         // Validate the submitted airline data
         $validated = $request->validate([
@@ -120,10 +137,10 @@ class AirlineController
         $airline = Airline::findOrFail($id);
 
         // Prevent deletion if the airline has associated flights
-        if ($airline->flights()->exists()) {
+        if ($airline->flights()->exists() || $airline->airlineAdmins()->exists()) {
             return redirect()
                 ->route('admin.airlines')
-                ->with('error', 'Cannot delete an airline that has associated flights.');
+                ->with('error', 'Cannot delete an airline that has associated flights or admins.');
         }
 
         // Delete the airline logo if it exists

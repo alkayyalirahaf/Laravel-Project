@@ -1,19 +1,7 @@
-@extends('layouts.app')
+@extends('super-admin.management-layout')
 
-@section('title', 'Countries')
-
-@section('content')
-    <section>
-        <h1>Countries</h1>
-        @if($errors->any())
-            <div class="notice error" role="alert">
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-        @yield('countries-content')
-    </section>
+@section('admin-title', 'Countries')
+@section('admin-content')
+    <h1>Countries</h1>
+    @yield('countries-content')
 @endsection
