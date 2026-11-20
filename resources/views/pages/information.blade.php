@@ -16,7 +16,7 @@
                     'Where can I see baggage allowances?' => 'Open Flight details and review the baggage allowance for the cabin you are considering.',
                     'How do cancellation and credits work?' => 'Cancellation eligibility and credits depend on your fare. Use Contact if you need help with an existing booking.',
                     'How do I select a seat?' => 'Seat selection appears after traveler details. Availability depends on the aircraft and cabin.',
-                    'Can I pay online?' => 'Online payment is currently unavailable.',
+                    'Can I pay online?' => 'Yes. Payments are processed through Stripe Checkout. Enter your card details on Stripe’s secure page; Yalla Teer does not store them.',
                 ] as $question => $answer)
                     <details class="panel"><summary>{{ $question }}</summary><p>{{ $answer }}</p></details>
                 @endforeach
@@ -26,17 +26,65 @@
             <article class="panel"><h2>Flight information</h2><p>Airline schedules and fares can change. Confirm your itinerary, baggage allowances, and fare conditions before traveling.</p><h2>Booking support</h2><p>Use the contact form if you need help with an existing reservation.</p><p>Full platform terms are pending publication.</p></article>
             @break
         @case('privacy')
-            <article class="panel"><h2>Account and support information</h2><p>Account details support sign-in and booking access. Contact form submissions are stored for staff to respond to your request.</p><h2>Passport data and AI</h2><p>Passport scanning and AI chat are currently unavailable. Keep passport numbers and payment details out of support messages.</p></article>
+            <article class="panel stack">
+                <section>
+                    <h2>Bookings</h2>
+                    <p>We collect the passport and identity details you provide when they are needed to arrange a booking.</p>
+                </section>
+                <section>
+                    <h2>Payments</h2>
+                    <p>Card details are entered on Stripe Checkout. We never store your card details.</p>
+                </section>
+                <section>
+                    <h2>Contact messages</h2>
+                    <p>Messages sent through our contact form are saved so our team can respond.</p>
+                </section>
+                <section>
+                    <h2>Search and AI</h2>
+                    <p>AI features may process text you enter while searching or chatting. Passport photos are never stored.</p>
+                </section>
+                <section>
+                    <h2>Account credits</h2>
+                    <p>Your account credits and balance changes are kept in a transaction ledger.</p>
+                </section>
+            </article>
             @break
         @case('contact')
-            <form method="POST" data-preview-form class="panel stack">
-                <p class="notice">Preview only. Use sample information. Submission is unavailable.</p>
-                <x-travel-field name="name" label="Name" required />
-                <x-travel-field name="email" label="Email" type="email" required />
-                <x-travel-field name="type" label="Topic" :options="['question' => 'Question', 'suggestion' => 'Suggestion', 'complaint' => 'Complaint']" required />
-                <x-travel-field name="message" label="Message" type="textarea" maxlength="5000" required />
-                <button class="button" disabled>Preview Send message</button><p data-preview-status role="status"></p>
+            @if(\Illuminate\Support\Facades\Route::has('contact.store'))
+            <form action="{{ route('contact.store') }}" method="POST" class="panel stack">
+                @csrf
+                @if(session('status'))
+                    <p class="notice" role="status">{{ session('status') }}</p>
+                @endif
+                <label class="field">
+                    <span>Name</span>
+                    <input name="name" value="{{ old('name') }}" maxlength="150" required>
+                    @error('name')<small class="error">{{ $message }}</small>@enderror
+                </label>
+                <label class="field">
+                    <span>Email</span>
+                    <input name="email" type="email" value="{{ old('email') }}" maxlength="255" required>
+                    @error('email')<small class="error">{{ $message }}</small>@enderror
+                </label>
+                <label class="field">
+                    <span>Topic</span>
+                    <select name="type" required>
+                        <option value="question" @selected(old('type') === 'question')>Question</option>
+                        <option value="suggestion" @selected(old('type') === 'suggestion')>Suggestion</option>
+                        <option value="complaint" @selected(old('type') === 'complaint')>Complaint</option>
+                    </select>
+                    @error('type')<small class="error">{{ $message }}</small>@enderror
+                </label>
+                <label class="field">
+                    <span>Message</span>
+                    <textarea name="message" maxlength="5000" required>{{ old('message') }}</textarea>
+                    @error('message')<small class="error">{{ $message }}</small>@enderror
+                </label>
+                <button class="button" type="submit">Send message</button>
             </form>
+            @else
+                <p class="notice" role="status">The contact form is temporarily unavailable. Please try again later.</p>
+            @endif
             @break
     @endswitch
 </div>

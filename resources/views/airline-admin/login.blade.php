@@ -8,7 +8,8 @@
     <h1>{{ $title ?? 'Airline Admin Login' }}</h1>
     <p>Sign in to manage your airline's flights and bookings.</p>
 
-    <form method="POST" action="" class="panel stack">
+    @if(\Illuminate\Support\Facades\Route::has('airline.login.submit'))
+    <form method="POST" action="{{ route('airline.login.submit') }}" class="panel stack">
         @csrf
 
         <x-travel-field name="email" label="Email address" type="email" autocomplete="username" required autofocus />
@@ -21,5 +22,8 @@
 
         <button type="submit" class="button">Sign in</button>
     </form>
+    @else
+        <p class="notice" role="status">Airline sign-in is temporarily unavailable. Please try again later.</p>
+    @endif
 </div>
 @endsection

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\PublicSite;
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\PublicFlightController;
 
-class FlightController
+// Keep existing routes working with the shared public flight controller.
+class FlightController extends PublicFlightController
 {
-    //
 }
