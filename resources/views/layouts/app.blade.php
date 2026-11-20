@@ -23,7 +23,14 @@
                 <a href="{{ route('destinations') }}">{{ __('Destinations') }}</a>
                 <a href="{{ route('booking.lookup') }}">{{ __('Booking lookup') }}</a>
                 <a href="{{ route('my.bookings') }}">{{ __('My bookings') }}</a>
-                <a class="button secondary" href="{{ route('login') }}">{{ __('Sign in') }}</a>
+                @auth
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="button secondary" type="submit">{{ __('Sign out') }}</button>
+                    </form>
+                @else
+                    <a class="button secondary" href="{{ route('login') }}">{{ __('Sign in') }}</a>
+                @endauth
                 @show
             </nav>
         </div>
@@ -61,4 +68,3 @@
     </footer>
 </body>
 </html>
-
