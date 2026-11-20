@@ -230,15 +230,15 @@ class OmarDiscoveryTest extends TestCase
         }
     }
 
-    public function test_credit_mutations_are_blocked_before_any_database_write(): void
+    public function test_credit_mutations_reject_invalid_operation_keys_before_database_access(): void
     {
         $credits = new CreditService;
         foreach (['addCredits', 'deductCredits', 'adjustBalance'] as $method) {
             try {
                 $credits->$method(1, '10.00', 'operation-key', 'Test reason', 2);
-                $this->fail('Blocked credit mutation was executed.');
-            } catch (\LogicException $exception) {
-                $this->assertSame(CreditService::BLOCKED, $exception->getMessage());
+                $this->fail('Invalid operation key was accepted.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('operation_id', $exception->errors());
             }
         }
     }
@@ -406,9 +406,9 @@ class OmarDiscoveryTest extends TestCase
 
     public function test_all_new_blade_templates_compile(): void
     {
-        $paths = [resource_path('views/omar/layout.blade.php')];
-        foreach (['flights', 'admin', 'reviews', 'assistant', 'information'] as $folder) {
-            $paths = array_merge($paths, glob(resource_path('views/omar/'.$folder.'/*.blade.php')));
+        $paths = [resource_path('views/layouts/app.blade.php'), resource_path('views/staff/panel.blade.php'), resource_path('views/customer/account.blade.php')];
+        foreach (['flights', 'pages', 'customer/assistant', 'super-admin/countries', 'super-admin/dashboard', 'super-admin/credits'] as $folder) {
+            $paths = array_merge($paths, glob(resource_path('views/'.$folder.'/*.blade.php')));
         }
         $this->assertGreaterThan(10, count($paths));
         foreach ($paths as $path) {

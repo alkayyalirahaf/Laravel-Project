@@ -97,10 +97,7 @@ Route::prefix('my')->name('my.')->middleware('role.customer')->group(function ()
         'title' => 'Booking Details',
     ])->name('booking');
 
-    Route::view('/bookings/{code}/review', 'customer.account', [
-        'screen' => 'review',
-        'title' => 'Write a Review',
-    ])->name('review');
+    Route::get('/bookings/{code}/review', [ReviewController::class, 'forBooking'])->name('review');
 
     Route::get('/credits', [CreditWalletController::class, 'index'])->name('credits');
 

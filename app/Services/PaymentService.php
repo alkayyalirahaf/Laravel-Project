@@ -355,20 +355,9 @@ class PaymentService
 
     private function applyCreditsHook(Booking $booking, Customer $customer): Booking
     {
-        // TODO(Dev 3): connect CreditService::applyToBooking($booking, $customer) here.
-        $class = 'App\\Services\\CreditService';
+        app(CreditService::class)->applyToBooking($booking, $customer);
 
-        if (class_exists($class)) {
-            $service = app($class);
-
-            if (method_exists($service, 'applyToBooking')) {
-                $service->applyToBooking($booking, $customer);
-
-                return $booking->fresh();
-            }
-        }
-
-        return $booking;
+        return $booking->fresh();
     }
 
     private function finalizeBookingHook(Booking $booking): void

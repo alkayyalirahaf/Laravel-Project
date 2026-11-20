@@ -1,18 +1,15 @@
-@extends('omar.layout', ['title' => 'Super Admin Dashboard'])
 
-@section('omar-content')
-    <h1>Super Admin Dashboard</h1>
-    <div class="row g-3 mb-4">
+    <div class="cards section">
         @foreach($statistics as $label => $count)
-            <div class="col-md-4"><article class="card card-body"><h2 class="h6">{{ $label }}</h2><p class="fs-3 mb-0">{{ number_format($count) }}</p></article></div>
+            <div class="col-md-4"><article class="panel"><h2 class="h6">{{ $label }}</h2><p class="fs-3 mb-0">{{ number_format($count) }}</p></article></div>
         @endforeach
     </div>
-    <nav class="mb-3">
-        <a class="btn btn-outline-primary" href="{{ route('admin.countries') }}">Manage countries</a>
-        <a class="btn btn-outline-primary" href="{{ route('admin.credits') }}">View credits</a>
+    <nav class="section">
+        <a class="button secondary" href="{{ route('admin.countries') }}">Manage countries</a>
+        <a class="button secondary" href="{{ route('admin.credits') }}">View credits</a>
     </nav>
     <h2>Recent bookings</h2>
-    <div class="table-responsive"><table class="table table-striped">
+    <div class="table-wrap panel section"><table class="table table-striped">
         <thead><tr><th>Booking</th><th>Customer</th><th>Status</th><th>Created</th></tr></thead><tbody>
         @forelse($recentBookings as $booking)
             <tr><td>{{ $booking->code }}</td><td>{{ $booking->customer->user->name }}</td><td>{{ $booking->status }}</td><td>{{ $booking->created_at?->format('Y-m-d H:i') }}</td></tr>
@@ -20,11 +17,10 @@
         </tbody>
     </table></div>
     <h2>Recent payments</h2>
-    <div class="table-responsive"><table class="table table-striped">
+    <div class="table-wrap panel section"><table class="table table-striped">
         <thead><tr><th>Payment</th><th>Booking</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead><tbody>
         @forelse($recentPayments as $payment)
             <tr><td>{{ $payment->id }}</td><td>{{ $payment->booking->code }}</td><td>{{ $payment->amount }}</td><td>{{ $payment->status }}</td><td>{{ $payment->created_at?->format('Y-m-d H:i') }}</td></tr>
         @empty<tr><td colspan="5">No payments yet.</td></tr>@endforelse
         </tbody>
     </table></div>
-@endsection
