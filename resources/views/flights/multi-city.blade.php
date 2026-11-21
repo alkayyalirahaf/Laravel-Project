@@ -7,7 +7,7 @@
         'legs.*.depart' => ['required', 'date_format:Y-m-d'],
     ]);
 @endphp
-<h1>{{ __('Multi-city results') }}</h1>
+<h1 class="flight-page-title">{{ __('Multi-city results') }}</h1>
 <p><a href="{{ route('home') }}#flight-search">{{ __('Back to flight search') }}</a></p>
 @if($search->fails())
     <p class="notice error">{{ __('Enter a departure airport, a different arrival airport, and a date for each flight.') }}</p>

@@ -1,0 +1,21 @@
+.assistant-shortcut {
+    position: fixed;
+    inset-inline-end: 1rem;
+    inset-block-end: max(1rem, env(safe-area-inset-bottom));
+    z-index: 20;
+    display: block;
+    inline-size: clamp(5.5rem, 11vw, 8rem);
+    line-height: 0;
+}
+.landing .assistant-shortcut { inline-size: clamp(9rem, 17vw, 14rem); }
+.assistant-shortcut img { width: 100%; height: auto; filter: drop-shadow(0 4px 8px #000c); }
+.assistant-shortcut:focus-visible { outline: 2px solid #ffe1a6; outline-offset: 3px; border-radius: .5rem; }
+@media (prefers-reduced-motion: no-preference) {
+    .assistant-shortcut img { animation: assistant-jet-float 3.6s ease-in-out infinite; }
+    .assistant-shortcut:is(:hover, :focus-visible) img { animation-play-state: paused; }
+}
+@keyframes assistant-jet-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+}
+@media print { .assistant-shortcut { display: none; } }

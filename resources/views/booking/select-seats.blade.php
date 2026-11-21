@@ -1,16 +1,24 @@
 @extends('layouts.app')
 @section('title', 'Select seats')
 @section('content')
-<div class="stack">
-    <h1>Select seats</h1>
-    <p>Choose one seat for each traveler. Your seats are held for 15 minutes after you continue.</p>
-    @if($errors->any())<p class="notice error" role="alert">{{ $errors->first() }}</p>@endif
+<div class="stack seat-selection">
+    <header>
+        <a class="selection-back" href="{{ route('book.passengers') }}">← Back to travelers</a>
+        <h1 class="flight-page-title">Select seats</h1>
+        <p>Choose one seat for each traveler. Your seats are held for 15 minutes after you continue.</p>
+    </header>
     <form class="stack" method="POST" action="{{ route('book.seats.store') }}">
         @csrf
         <input type="hidden" name="booking_code" value="{{ $code }}">
         @foreach($cabins as $direction => $cabin)
-            <section class="panel stack" data-seat-picker>
-                <h2>{{ ucfirst($direction) }} · {{ $cabin->flight->flight_number }} · {{ ucfirst($cabin->class) }}</h2>
+            <section class="panel stack seat-flight" data-seat-picker>
+                <div class="seat-flight-heading">
+                    <div>
+                        <p>{{ ucfirst($direction) }}</p>
+                        <h2>{{ $cabin->flight->flight_number }}</h2>
+                    </div>
+                    <span class="seat-flight-cabin">{{ ucfirst($cabin->class) }}</span>
+                </div>
                 <div class="actions seat-traveler-switch" data-seat-traveler-switch hidden>
                     @foreach($passengers as $index => $passenger)
                         <button type="button" class="button secondary" data-seat-traveler="{{ $index }}" aria-pressed="false">
@@ -32,7 +40,9 @@
                 </div>
             </section>
         @endforeach
-        <div class="actions"><a href="{{ route('book.passengers') }}">Back to travelers</a><button class="button">Review booking</button></div>
+        <div class="actions seat-selection-actions">
+            <button class="button" type="submit">Review booking</button>
+        </div>
     </form>
 </div>
 @endsection

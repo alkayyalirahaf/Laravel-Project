@@ -1,6 +1,6 @@
 .landing {
     --background:#080808; --surface:#141414; --text:#f5f1e8; --muted:#a5a5a5;
-    --gold:#d4af37; --highlight:#f4e4ba; --border:#353027;
+    --gold:#d6ad65; --highlight:#ffe1a6; --border:#353027;
     --landing-width: min(100% - 3rem, 76rem);
 }
 .landing .site-header,.landing .site-footer {background:#0b0b0b}
@@ -11,7 +11,7 @@
 .landing-nav-links a {padding-block:.5rem}
 .landing .site-header .landing-nav-links a:hover {color:var(--highlight)}
 .landing-nav-actions {border-inline-start:1px solid var(--border);padding-inline-start:1rem}
-.landing .landing-nav-book {background:linear-gradient(115deg,#e7b557,#ffe0a0);border-radius:.65rem;white-space:nowrap}
+.landing .landing-nav-book {border-radius:.65rem;white-space:nowrap}
 @media(max-width:64rem) {
     .landing-nav-links {align-items:stretch;flex-direction:column;gap:0}
     .landing-nav-actions {border-inline-start:0;border-block-start:1px solid var(--border);padding:.75rem 0 0}
@@ -23,7 +23,7 @@
 .landing-language button[aria-pressed="true"] {border-color:var(--border);color:var(--highlight)}
 [dir=rtl] .landing h1,[dir=rtl] .landing h2 {letter-spacing:normal;line-height:1.25}
 .landing .main {width:100%;padding:0;overflow-x:clip}
-.landing .button {background:var(--gold);color:#141008;gap:.55rem}
+.landing .button {background:linear-gradient(120deg,#bb8842,#f4d69a 49%,#d4aa62);color:#141008;gap:.55rem}
 .landing .button.secondary {background:#141414ba;color:var(--highlight);border-color:#766344}
 .landing-hero {position:relative;isolation:isolate;min-height:34rem;display:grid;align-items:center}
 .landing-hero-image {position:absolute;z-index:-1;inset:0;background:#080808}

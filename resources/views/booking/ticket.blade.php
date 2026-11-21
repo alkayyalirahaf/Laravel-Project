@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ asset('assets/assistant-shortcut.css') }}">
     <title>Ticket {{ $ticket->ticket_number }} · Yalla Teer</title>
     <style id="ticket-styles">
         * { box-sizing: border-box; }
@@ -102,6 +103,7 @@
             </aside>
         </article>
     </main>
+    <x-assistant-shortcut />
     <script>
         function ticketPdf(canvas) {
             const jpeg = Uint8Array.from(atob(canvas.toDataURL('image/jpeg', .95).split(',')[1]), byte => byte.charCodeAt(0));

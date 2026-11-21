@@ -3,15 +3,53 @@
 @section('title', 'Selected flights')
 
 @section('content')
-<h1>Selected flights</h1>
-    <p class="notice">Your selection is saved for this session. Seats are not reserved and prices can change before booking.</p>
-    <p>{{ $selection['passengers'] }} seats requested — {{ $selection['trip'] === 'round_trip' ? 'Round trip' : 'One way' }}</p>
-    <p>Adults: {{ $selection['passenger_counts']['adults'] }} · Youth: {{ $selection['passenger_counts']['youth'] }} · Children: {{ $selection['passenger_counts']['children'] }} · Infants: {{ $selection['passenger_counts']['infants'] }}</p>
-    <table class="table"><thead><tr><th>Leg</th><th>Flight</th><th>Base fare per seat</th></tr></thead><tbody>
+@php
+    $selectedFlights = $loadSelectedFlights();
+    $backFilters = $selection['filters'] ?? [];
+    if ($selection['trip'] === 'round_trip' && $backFilters) {
+        $backFilters['leg'] = 'return';
+        $backFilters['outbound_class_id'] = $selection['outbound']['flight_class_id'];
+    }
+@endphp
+<div class="flight-selection stack">
+    <header>
+        <a class="selection-back" href="{{ route('flights.search', $backFilters) }}">← Back to results</a>
+        <h1 class="flight-page-title">Selected flights</h1>
+    </header>
+    <div class="selection-layout">
+        <section class="panel stack" aria-labelledby="selection-itinerary">
+            <h2 id="selection-itinerary">Itinerary</h2>
         @foreach(['outbound' => 'Outbound', 'return' => 'Return'] as $key => $label)
-            @if($selection[$key])<tr><td>{{ $label }}</td><td><a href="{{ route('flights.show', $selection[$key]['flight_id']) }}">Flight #{{ $selection[$key]['flight_id'] }}</a></td><td>{{ $selection[$key]['price'] }}</td></tr>@endif
+            @continue(!$selection[$key])
+            @php($flight = $selectedFlights->get($selection[$key]['flight_id']))
+            <div class="selection-leg">
+                <div class="selection-airline">
+                    @if(in_array($flight?->airline?->code, ['RJ', 'EK', 'TK'], true))
+                        <img data-airline-image src="https://www.gstatic.com/flights/airline_logos/70px/{{ $flight->airline->code }}.png" alt="" width="54" height="54">
+                    @endif
+                    <div>
+                        <h3>{{ $label }}</h3>
+                        <a href="{{ route('flights.show', $selection[$key]['flight_id']) }}">{{ $flight?->flight_number ?? ('Flight #'.$selection[$key]['flight_id']) }}</a>
+                        @if($flight?->airline)<small>{{ $flight->airline->name }}</small>@endif
+                    </div>
+                </div>
+                <div class="selection-fare"><strong>JOD {{ $selection[$key]['price'] }}</strong><small>Base fare per seat</small></div>
+            </div>
         @endforeach
-    </tbody></table>
-    <a class="button" href="{{ route('book.passengers') }}">Continue to passengers</a>
-    <a class="button secondary" href="{{ route('flights.search') }}">Search again</a>
+        </section>
+        <aside class="panel stack" aria-labelledby="selection-travelers">
+            <h2 id="selection-travelers">Travelers</h2>
+            <p>{{ $selection['trip'] === 'round_trip' ? 'Round trip' : 'One way' }} · {{ trans_choice(':count seat|:count seats', $selection['passengers']) }}</p>
+            <ul>
+                @foreach(['adults' => 'Adult|Adults', 'youth' => 'Youth', 'children' => 'Child|Children', 'infants' => 'Infant|Infants'] as $key => $labels)
+                    @if($count = $selection['passenger_counts'][$key])
+                        <li>{{ $count }} {{ trans_choice($labels, $count) }}</li>
+                    @endif
+                @endforeach
+            </ul>
+            <a class="button" href="{{ route('book.passengers') }}">Continue to passengers <span aria-hidden="true">→</span></a>
+        </aside>
+    </div>
+    <p class="selection-note"><span aria-hidden="true">ⓘ</span> Seats are not reserved yet. Fares may change before booking.</p>
+</div>
 @endsection

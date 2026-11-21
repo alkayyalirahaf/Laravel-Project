@@ -29,7 +29,5 @@
 
 @section('content')
 <p class="eyebrow">Airline desk</p>
-@if(session('success'))<p class="notice" role="status">{{ session('success') }}</p>@endif
-@if(session('error'))<p class="notice error" role="alert">{{ session('error') }}</p>@endif
 @yield('flight-content')
 @endsection

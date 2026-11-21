@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&amp;display=swap">
     @section('display-font')@show
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="{{ asset('assets/assistant-shortcut.css') }}">
 </head>
 <body class="@yield('body-class')">
     <a class="skip" href="#main">{{ __('Skip to content') }}</a>
@@ -33,9 +34,13 @@
         </div>
     </header>
     <main id="main" class="wrap main">
-        @if(session('status')) <p class="notice" role="status">{{ session('status') }}</p> @endif
+        @section('page-status')
+            @if(session('status')) <x-toast>{{ session('status') }}</x-toast> @endif
+            @if(session('success') && session('success') !== session('status')) <x-toast type="success">{{ session('success') }}</x-toast> @endif
+            @if(session('error')) <x-toast type="error">{{ session('error') }}</x-toast> @endif
+        @show
         @if(isset($errors) && $errors->any())
-            <div class="notice error" role="alert"><p>{{ __('Check the highlighted fields and try again.') }}</p><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+            <x-toast type="error"><strong>{{ __('Check the highlighted fields and try again.') }}</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></x-toast>
         @endif
         @if(!empty($area))
             <nav @class(['subnav', 'account-subnav' => $area === 'my']) aria-label="{{ $area === 'my' ? 'Your account' : 'Management' }}">
@@ -65,5 +70,7 @@
             @show
         </div>
     </footer>
+    <div class="site-toasts">@stack('toasts')</div>
+    <x-assistant-shortcut />
 </body>
 </html>

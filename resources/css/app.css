@@ -21,6 +21,55 @@ body { font-family: var(--site-font); background: var(--background); color: var(
 a { color: var(--gold); text-underline-offset: .24em; }
 a:hover { text-decoration: underline; }
 :focus-visible { outline: 2px solid var(--highlight); outline-offset: 4px; }
+.assistant-chat { display: grid; max-width: 54rem; margin-inline: auto; gap: .75rem; }
+.assistant-history { grid-row: 2; padding: .8rem 1.25rem; }
+.assistant-history summary { font-weight: 650; color: var(--highlight); }
+.assistant-history > .button { margin-top: .65rem; }
+.assistant-history ul { display: grid; gap: .35rem; margin-block: 1rem; }
+.assistant-history li a { display: grid; gap: .15rem; border-radius: .5rem; padding: .6rem; color: var(--text); }
+.assistant-history small { color: var(--muted); }
+.assistant-history li a:is(:hover, [aria-current]) { background: #302619; color: var(--highlight); }
+.assistant-room { padding: 0; overflow: hidden; }
+.assistant-room-header { display: flex; gap: .75rem; align-items: center; padding: .8rem 1.25rem; border-bottom: 1px solid var(--border); }
+.assistant-room-header h1 { margin: 0; color: var(--gold); font-family: Georgia, serif; font-size: clamp(1.15rem, 2vw, 1.5rem); }
+.assistant-room-header img { object-fit: contain; }
+@media (prefers-reduced-motion: no-preference) {
+    .assistant-room-header img { animation: assistant-header-float 3.8s ease-in-out infinite; }
+}
+@keyframes assistant-header-float {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-5px) rotate(3deg); }
+}
+.assistant-messages { display: grid; align-content: start; gap: 1rem; min-height: 16rem; padding: 1.25rem; background: var(--background); }
+.assistant-message { justify-self: start; max-width: min(90%, 44rem); padding: .8rem 1rem; border-radius: .35rem 1rem 1rem; background: var(--surface); border: 1px solid var(--border); }
+.assistant-message-user { justify-self: end; background: #382a17; border-radius: 1rem .35rem 1rem 1rem; }
+.assistant-message strong { display: block; color: var(--highlight); margin-bottom: .35rem; }
+.assistant-message > div { white-space: pre-wrap; }
+.assistant-message > div + div { margin-top: .55rem; }
+.assistant-composer, .assistant-room > .notice { margin: 1rem 1.25rem; }
+.assistant-composer textarea { resize: vertical; }
+.assistant-modes { display: flex; flex-wrap: wrap; gap: .45rem .9rem; }
+.assistant-modes label { display: flex; align-items: center; gap: .35rem; cursor: pointer; }
+.assistant-modes input { accent-color: var(--gold); }
+.assistant-options { margin-top: .75rem; padding: .65rem; border: 1px solid var(--border); border-radius: .55rem; }
+.assistant-input { position: relative; margin-block: .8rem .45rem; }
+.assistant-input textarea { display: block; width: 100%; min-height: 4.5rem; padding-inline-end: 3.65rem; resize: none; }
+.assistant-input .button {
+    position: absolute;
+    inset-inline-end: .55rem;
+    inset-block-end: .55rem;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--gold);
+}
+.assistant-input .button:not(:disabled):hover { background: transparent; color: var(--highlight); box-shadow: none; }
+[dir="rtl"] .assistant-input .button svg { transform: scaleX(-1); }
+.assistant-composer small { color: var(--muted); }
 h1, h2, h3 { color: var(--text); line-height: 1.12; overflow-wrap: anywhere; }
 h1 { font-family: inherit; font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 1.2rem; }
 h2 { font-size: clamp(1.2rem, 3vw, 1.65rem); margin-bottom: .55rem; font-weight: 650; }
@@ -100,25 +149,52 @@ p { color: var(--muted); margin-block: .4rem .8rem; }
 .hero p { font-size: 1.1rem; }
 .eyebrow { color: var(--gold); font-size: .78rem !important; letter-spacing: .15em; text-transform: uppercase; font-weight: 700; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: .9rem; padding: clamp(1rem, 2.5vw, 1.5rem); min-width: 0; overflow-wrap: anywhere; }
-.booking-page-navigation { display: flex; gap: .5rem; }
-.booking-page-navigation .button {
-    display: grid;
-    place-items: center;
-    background: transparent;
-    border-color: transparent;
-    box-shadow: none;
-    width: 2.75rem;
-    min-height: 2.75rem;
-    padding: 0;
-    font-size: 1.2rem;
+.flight-page-title {
+    color: var(--gold);
+    font-family: Georgia, serif;
+    font-size: clamp(1.85rem, 4.5vw, 3rem);
+    font-weight: 500;
 }
-.booking-page-navigation .button:hover { background: transparent; border-color: transparent; box-shadow: none; color: var(--highlight); }
+.flight-selection { max-width: 66rem; margin-inline: auto; }
+.flight-selection .flight-page-title { margin: .65rem 0 0; }
+.selection-back { display: inline-block; padding-block: .4rem; }
+.seat-selection { max-width: 58rem; margin-inline: auto; }
+.seat-selection .flight-page-title { margin: .65rem 0 .5rem; }
+.seat-selection header p { margin: 0; }
+.seat-selection-actions { justify-content: flex-end; }
+.seat-selection .seat-map-traveler { border: 0; padding: 0; }
+.seat-selection .seat-map-traveler legend { padding: 0; margin-bottom: .45rem; }
+.seat-flight-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding-bottom: .85rem; border-bottom: 1px solid var(--border); }
+.seat-flight-heading h2, .seat-flight-heading p { margin: 0; }
+.seat-flight-heading p { color: var(--gold); font-size: .85rem; }
+.seat-flight-cabin { color: var(--highlight); border: 1px solid var(--border); border-radius: 2rem; padding: .3rem .75rem; }
+.seat-flight .seat-map-traveler legend { margin-inline: auto; text-align: center; font-weight: 600; }
+.seat-flight .booking-cabin caption { text-align: center; }
+.seat-flight .booking-cabin-shell .booking-seat span { min-width: 2rem; min-height: 2rem; }
+.seat-flight .booking-seat:hover input:not(:disabled):not(:checked) + span { border-color: var(--highlight); }
+.seat-flight .booking-cabin-legend { padding-block: .5rem; font-size: .85rem; }
+.selection-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.selection-layout h2, .selection-layout h3, .selection-layout p, .flight-selection > .notice { margin: 0; }
+.selection-leg { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .65rem 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.selection-fare { display: grid; gap: .2rem; text-align: end; margin-inline-start: auto; }
+.selection-fare strong { color: var(--highlight); font-size: 1.2rem; }
+.selection-fare small { color: var(--muted); }
+.selection-airline { display: flex; align-items: center; gap: .8rem; }
+.selection-airline img { object-fit: contain; flex-shrink: 0; }
+.selection-airline small { display: block; color: var(--muted); }
+.flight-selection .selection-note { display: flex; align-items: baseline; gap: .5rem; margin: 0; font-size: .85rem; }
+.selection-note span { color: var(--gold); }
+.selection-layout aside .button { display: flex; justify-content: space-between; align-items: center; gap: .65rem; }
+@media (max-width: 46rem) {
+    .selection-layout { grid-template-columns: minmax(0, 1fr); }
+}
 .booking-details .booking-details-heading h1 { margin-bottom: .75rem; }
 .booking-details .booking-details-heading p { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 0; }
 .booking-details .booking-status { padding: .2rem .65rem; border: 1px solid var(--border); border-radius: 2rem; }
 .booking-details .booking-status--confirmed { background: #182820; border-color: #42644e; color: #bde7c8; }
 .booking-details .booking-itinerary-leg { padding: .85rem 1rem; border: 1px solid var(--border); border-radius: .65rem; background: var(--background); }
-.booking-details .booking-itinerary-leg h3 { color: var(--highlight); }
+.booking-details .booking-itinerary-leg h3 { color: var(--text); font-size: 1.25rem; }
+.booking-details .booking-leg-meta { color: var(--highlight); font-size: .85rem; margin: 0; }
 .booking-details .booking-ticket-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding-block: .65rem; border-block-start: 1px solid var(--border); }
 .booking-details .booking-ticket-row p { margin: 0; }
 .booking-details .booking-ticket-row strong { color: var(--text); }
@@ -130,6 +206,28 @@ p { color: var(--muted); margin-block: .4rem .8rem; }
 .booking-details .booking-travelers li + li { margin-top: .35rem; }
 .booking-details .booking-total { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .35rem; border-top: 1px solid var(--border); padding-top: .85rem; margin: .85rem 0 0; }
 .booking-details .booking-total strong { color: var(--highlight); }
+.booking-review .selection-back { margin-bottom: .45rem; }
+.site-toasts { position: fixed; inset-block-start: 1rem; inset-inline-end: 1rem; z-index: 1100; display: grid; gap: .65rem; width: min(26rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; }
+.site-toasts:empty { display: none; }
+.site-toast { display: flex; align-items: start; justify-content: space-between; gap: .75rem; padding: .85rem 1rem; border: 1px solid var(--gold); border-radius: .75rem; background: var(--surface); color: var(--text); box-shadow: 0 .5rem 1.5rem #0006; }
+.site-toast--success { border-color: #42644e; background: #182820; color: #bde7c8; }
+.site-toast--error { border-color: #966a6a; background: #302121; color: var(--error); }
+.site-toast button { color: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.site-toast ul { margin-top: .35rem; }
+.booking-review .booking-review-hold { margin: 0; padding: .75rem 1rem; border: 1px solid var(--border); border-radius: .65rem; background: var(--surface); }
+.booking-review-hold strong { color: var(--highlight); }
+.booking-review .booking-review-pay { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: 1rem; }
+.payment-page { max-width: 35rem; margin-inline: auto; }
+.payment-page h1, .payment-summary h2 { margin: 0; }
+.payment-breakdown { display: grid; gap: .65rem; }
+.payment-breakdown > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .35rem 1rem; }
+.payment-breakdown dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
+.payment-breakdown .payment-due { align-items: baseline; padding-top: .8rem; border-top: 1px solid var(--border); color: var(--highlight); font-weight: 700; }
+.payment-due dd { font-size: 1.35rem; }
+.payment-summary .payment-conversion { margin: 0; color: var(--muted); font-size: .9rem; }
+.payment-conversion strong { color: var(--text); }
+.payment-submit { position: relative; padding-inline: 2.5rem; }
+.payment-submit span { position: absolute; inset-inline-end: .85rem; }
 @media (max-width: 48rem) {
     .booking-details .booking-details-grid { grid-template-columns: minmax(0, 1fr); }
 }
@@ -386,6 +484,19 @@ summary { cursor: pointer; }
 .passenger-summary dl > div {display:flex;justify-content:space-between;gap:.75rem;padding-block:.55rem;border-bottom:1px solid #403626}
 .passenger-summary dd {margin:0;text-align:end;font-weight:600}
 .passenger-summary .button {margin-block-start:.65rem}
+.passenger-heading .flight-page-title { margin: .45rem 0 0; }
+.passenger-layout .passenger-fields {
+    border: 1px solid var(--border);
+    border-radius: .75rem;
+    padding: .65rem 1rem 1rem;
+}
+.passenger-layout .passenger-fields legend { padding: 0 .45rem; }
+.passenger-layout .passenger-contact { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.passenger-assistance { grid-column: 1 / -1; }
+.passenger-actions { display: flex; justify-content: flex-end; }
+.passenger-actions .button { display: inline-flex; align-items: center; gap: .6rem; }
+.passenger-layout .passenger-summary dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+.passenger-layout .passenger-summary dl > div:last-child dd { color: var(--highlight); }
 @media(max-width:52rem) {
     .passenger-layout {grid-template-columns:minmax(0,1fr)}
 }
@@ -411,7 +522,6 @@ summary { cursor: pointer; }
 .booking-cabin-shell .booking-seat input + span::before {content:none}
 .search-refinements { display:flex; flex-wrap:wrap; align-items:end; gap:1rem; margin-block:1.5rem; }
 .search-refinements .field { flex:1 1 12rem; }
-.flight-search-title { margin-bottom: 1.25rem; }
 .flight-search-panel .landing-search { padding: 0; }
 .flight-search-panel .cabin-options span {
     background: transparent;
