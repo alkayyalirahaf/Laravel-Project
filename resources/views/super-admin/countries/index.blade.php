@@ -1,8 +1,8 @@
 @extends('super-admin.countries.layout')
 
 @section('countries-content')
-    <a class="button mb-3" href="{{ route('admin.countries.create') }}">Create country</a>
-    <div class="table-wrap panel section">
+    <div class="d-flex justify-content-end mb-3"><a class="btn btn-primary px-4 py-2" href="{{ route('admin.countries.create') }}">Create country</a></div>
+    <div class="table-responsive">
         <table class="table table-striped align-middle">
             <thead>
                 <tr><th>Name</th><th>Code</th><th>Currency</th><th>Language</th><th>Local apps</th><th>Actions</th></tr>
@@ -16,12 +16,12 @@
                         <td>{{ $country->language }}</td>
                         <td class="text-break">{{ $country->local_apps ?: '—' }}</td>
                         <td>
-                            <a class="button secondary " href="{{ route('admin.countries.edit', $country) }}">Edit</a>
+                            <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.countries.edit', $country) }}">Edit</a>
                             @if($country->cities_count === 0)
-                                <form class="inline-form" method="POST" action="{{ route('admin.countries.destroy', $country) }}">
+                                <form class="d-inline" method="POST" action="{{ route('admin.countries.destroy', $country) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="button secondary" type="submit">Delete {{ $country->name }}</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                                 </form>
                             @else
                                 <span class="text-muted">Has cities; cannot delete</span>
@@ -34,5 +34,5 @@
             </tbody>
         </table>
     </div>
-    {{ $countries->links() }}
+    {{ $countries->links('pagination::bootstrap-5') }}
 @endsection

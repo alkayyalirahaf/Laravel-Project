@@ -6,7 +6,7 @@
         @endforeach
     </div>
     <h2>Recent bookings</h2>
-    <div class="table-wrap panel section"><table class="table table-striped">
+    <div class="table-responsive"><table class="table table-striped align-middle">
         <thead><tr><th>Booking</th><th>Customer</th><th>Status</th><th>Created</th></tr></thead><tbody>
         @forelse($recentBookings as $booking)
             <tr><td>{{ $booking->code }}</td><td>{{ $booking->customer->user->name }}</td><td>{{ $booking->status }}</td><td>{{ $booking->created_at?->format('Y-m-d H:i') }}</td></tr>
@@ -14,7 +14,7 @@
         </tbody>
     </table></div>
     <h2 class="mt-4">Recent payments</h2>
-    <div class="table-responsive"><table class="table table-striped">
+    <div class="table-responsive"><table class="table table-striped align-middle">
         <thead><tr><th>Payment</th><th>Booking</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead><tbody>
         @forelse($recentPayments as $payment)
             <tr><td>{{ $payment->id }}</td><td>{{ $payment->booking->code }}</td><td>{{ $payment->amount }}</td><td>{{ $payment->status }}</td><td>{{ $payment->created_at?->format('Y-m-d H:i') }}</td></tr>

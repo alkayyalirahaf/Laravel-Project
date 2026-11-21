@@ -1,36 +1,35 @@
-@extends('layouts.app', ['area' => 'admin', 'navigation' => ['airports' => ['/airports', 'Airports']]])
+@extends('super-admin.management-layout')
 
-@section('title', $title)
+@section('admin-title', $title)
 
-@section('content')
-<div class="bar">
-    <h1>{{ $title }}</h1>
-    <a class="button" href="{{ route('admin.airports.create') }}">Create airport</a>
+@section('admin-content')
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+    <h1 class="mb-0">{{ $title }}</h1>
+    <a class="btn btn-primary px-4 py-2" href="{{ route('admin.airports.create') }}">Create airport</a>
 </div>
 
-<form action="{{ route('admin.airports') }}" method="GET" class="panel form-grid section">
-    <label class="field">
-        <span>Search name or IATA code</span>
-        <input name="search" value="{{ $filters['search'] }}">
-    </label>
-    <label class="field">
-        <span>City</span>
-        <select name="city_id">
+<form action="{{ route('admin.airports') }}" method="GET" class="panel p-3 mb-3 row g-3 align-items-end">
+    <div class="col-md-5">
+        <label class="form-label" for="search">Search name or IATA code</label>
+        <input class="form-control" id="search" name="search" value="{{ $filters['search'] }}">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label" for="city_id">City</label>
+        <select class="form-select" id="city_id" name="city_id">
             <option value="">All cities</option>
             @foreach($cities as $city)
                 <option value="{{ $city->id }}" @selected((string) $filters['city_id'] === (string) $city->id)>{{ $city->name }}</option>
             @endforeach
         </select>
-    </label>
-    <div class="actions wide">
-        <button class="button" type="submit">Filter</button>
-        <a class="button secondary" href="{{ route('admin.airports') }}">Clear</a>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Filter</button>
+        <a class="btn btn-outline-secondary" href="{{ route('admin.airports') }}">Clear</a>
     </div>
 </form>
 
-<section class="panel table-wrap section">
-    <table>
-        <caption>Airports</caption>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
         <thead>
             <tr><th>Name</th><th>IATA code</th><th>City</th><th>Actions</th></tr>
         </thead>
@@ -41,12 +40,12 @@
                     <td>{{ $airport->code }}</td>
                     <td>{{ $airport->city->name }}</td>
                     <td>
-                        <div class="actions">
-                            <a href="{{ route('admin.airports.edit', $airport) }}">Edit</a>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.airports.edit', $airport) }}">Edit</a>
                             <form action="{{ route('admin.airports.destroy', $airport) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
-                                <button class="button secondary" type="submit" onclick="return confirm('Delete this airport?')">Delete</button>
+                                <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Delete this airport?')">Delete</button>
                             </form>
                         </div>
                     </td>
@@ -56,7 +55,7 @@
             @endforelse
         </tbody>
     </table>
-</section>
+</div>
 
-<div class="section">{{ $airports->links() }}</div>
+{{ $airports->links('pagination::bootstrap-5') }}
 @endsection

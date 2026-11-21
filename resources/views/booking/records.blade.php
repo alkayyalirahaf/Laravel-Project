@@ -1,9 +1,10 @@
-@extends('layouts.app', ['area' => ($admin ?? false) ? 'admin' : 'my'])
+@extends(($admin ?? false) ? 'super-admin.management-layout' : 'layouts.app', ($admin ?? false) ? [] : ['area' => 'my'])
 @section('title', ($admin ?? false) ? 'Bookings' : 'My bookings')
-@section('content')
+@section('admin-title', 'Bookings')
+@section(($admin ?? false) ? 'admin-content' : 'content')
 <h1>{{ ($admin ?? false) ? 'Bookings' : 'My bookings' }}</h1>
-<div class="panel table-wrap">
-    <table>
+<div @class(['table-responsive' => ($admin ?? false), 'panel table-wrap' => !($admin ?? false)])>
+    <table @class(['table table-striped align-middle' => ($admin ?? false)])>
         <thead><tr><th>Reference</th><th>Status</th><th>Total</th><th>Date booked</th></tr></thead>
         <tbody>
             @forelse($bookings as $booking)
