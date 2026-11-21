@@ -1,12 +1,12 @@
 @extends('super-admin.airlines.layout')
 
 @section('airlines-content')
-    <div class="d-flex justify-content-between mb-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
         <h2 class="mb-0">Airline list</h2>
         <a class="btn btn-primary px-4 py-2" href="{{ route('admin.airlines.create') }}">Add airline</a>
     </div>
 
-    <form method="GET" action="{{ route('admin.airlines') }}" class="row g-2 mb-3">
+    <form method="GET" action="{{ route('admin.airlines') }}" class="row g-2 mb-3 align-items-end">
         <div class="col-md-6"><input class="form-control" name="search" value="{{ request('search') }}" placeholder="Search name or code"></div>
         <div class="col-md-3">
             <select class="form-select" name="status">
@@ -27,12 +27,14 @@
             <tr>
                 <td>@if ($airline->logo)<img src="{{ asset('storage/'.$airline->logo) }}" alt="{{ $airline->name }} logo" width="48">@else — @endif</td>
                 <td>{{ $airline->name }}</td><td>{{ $airline->code }}</td><td>{{ $airline->country }}</td><td>{{ ucfirst($airline->status) }}</td>
-                <td class="text-nowrap">
+                <td>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
                     <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.airlines.edit', $airline->id) }}">Edit</a>
                     @if ($airline->status !== 'suspended')
                         <form class="d-inline" method="POST" action="{{ route('admin.airlines.suspend', $airline->id) }}">@csrf @method('PATCH')<button class="btn btn-sm btn-outline-warning">Suspend</button></form>
                     @endif
                     <form class="d-inline" method="POST" action="{{ route('admin.airlines.destroy', $airline->id) }}" onsubmit="return confirm('Delete this airline?')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger">Delete</button></form>
+                    </div>
                 </td>
             </tr>
         @empty

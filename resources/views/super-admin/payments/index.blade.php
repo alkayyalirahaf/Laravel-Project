@@ -5,7 +5,7 @@
 @section('admin-content')
     <h1>Payments</h1>
 
-    <form method="GET" action="{{ route('admin.payments') }}" class="row g-2 mb-3">
+    <form method="GET" action="{{ route('admin.payments') }}" class="row g-2 mb-3 align-items-end">
         <div class="col-md-6">
             <input class="form-control" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search booking code or Stripe payment intent">
         </div>

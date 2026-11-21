@@ -8,7 +8,7 @@
         <div class="col-md-3 d-flex align-items-end gap-2"><button class="btn btn-primary">Search / Filter</button><a class="btn btn-outline-secondary" href="{{ route('admin.ai-conversations') }}">Clear</a></div>
     </form>
     <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Title</th><th>Type</th><th>Customer</th><th>Date</th><th></th></tr></thead><tbody>
-        @forelse($conversations as $conversation)<tr><td>{{ $conversation->title }}</td><td>{{ ucfirst($conversation->type) }}</td><td>{{ $conversation->customer?->user?->name ?? 'Guest' }}</td><td>{{ $conversation->created_at }}</td><td><a href="{{ route('admin.ai-conversations.show', $conversation) }}">View</a></td></tr>
+        @forelse($conversations as $conversation)<tr><td>{{ $conversation->title }}</td><td>{{ ucfirst($conversation->type) }}</td><td>{{ $conversation->customer?->user?->name ?? 'Guest' }}</td><td>{{ $conversation->created_at }}</td><td><a class="btn btn-sm btn-outline-primary" href="{{ route('admin.ai-conversations.show', $conversation) }}">View</a></td></tr>
         @empty<tr><td colspan="5">No conversations found.</td></tr>@endforelse
     </tbody></table></div>{{ $conversations->links('super-admin.pagination') }}
 @endsection

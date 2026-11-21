@@ -13,5 +13,5 @@
         @forelse($bookings as $booking)<tr><td>{{ $booking->code }}</td><td>{{ $booking->status }}</td><td>{{ $booking->total }}</td><td>{{ $booking->created_at }}</td></tr>
         @empty<tr><td colspan="4">No bookings.</td></tr>@endforelse
     </tbody></table></div>{{ $bookings->links('super-admin.pagination') }}
-    <a href="{{ route('admin.customers') }}">Back to customers</a>
+    <a class="btn btn-outline-secondary mt-3" href="{{ route('admin.customers') }}">Back to customers</a>
 @endsection

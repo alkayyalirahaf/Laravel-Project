@@ -1,7 +1,10 @@
 @extends('super-admin.countries.layout')
 
 @section('countries-content')
-    <div class="d-flex justify-content-end mb-3"><a class="btn btn-primary px-4 py-2" href="{{ route('admin.countries.create') }}">Create country</a></div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <h1 class="mb-0">Countries</h1>
+        <a class="btn btn-primary px-4 py-2" href="{{ route('admin.countries.create') }}">Add country</a>
+    </div>
     <div class="table-responsive">
         <table class="table table-striped align-middle">
             <thead>

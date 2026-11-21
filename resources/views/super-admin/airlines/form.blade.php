@@ -20,5 +20,7 @@
     <input class="form-control" id="logo" name="logo" type="file" accept="image/jpeg,image/png,image/webp">
     @if ($airline->logo)<img class="mt-2" src="{{ asset('storage/'.$airline->logo) }}" alt="Current airline logo" width="80">@endif
 </div>
-<button class="btn btn-primary" type="submit">Save airline</button>
-<a class="btn btn-secondary" href="{{ route('admin.airlines') }}">Cancel</a>
+<div class="d-flex flex-wrap gap-2 mt-4">
+    <button class="btn btn-primary" type="submit">Save airline</button>
+    <a class="btn btn-secondary" href="{{ route('admin.airlines') }}">Cancel</a>
+</div>
