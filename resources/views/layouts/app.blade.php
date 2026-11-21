@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Travel') | Yalla Teer</title>
     <link rel="icon" href="{{ asset('assets/YallaTeer-Logo-02.png') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&amp;display=swap">
+    @section('display-font')@show
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="@yield('body-class')">
@@ -22,17 +24,10 @@
                 <a href="{{ route('flights.search') }}">{{ __('Flights') }}</a>
                 <a href="{{ route('destinations') }}">{{ __('Destinations') }}</a>
                 <a href="{{ route('booking.lookup') }}">{{ __('Booking lookup') }}</a>
-                <a href="{{ route('my.bookings') }}">{{ __('My bookings') }}</a>
-                @auth
-                    @if(\Illuminate\Support\Facades\Route::has('logout'))
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="button secondary" type="submit">{{ __('Sign out') }}</button>
-                    </form>
-                    @endif
-                @else
-                    <a class="button secondary" href="{{ route('login') }}">{{ __('Sign in') }}</a>
-                @endauth
+                @guest
+                    <a href="{{ route('my.bookings') }}">{{ __('My bookings') }}</a>
+                @endguest
+                <x-nav-account />
                 @show
             </nav>
         </div>
@@ -43,7 +38,7 @@
             <div class="notice error" role="alert"><p>{{ __('Check the highlighted fields and try again.') }}</p><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
         @if(!empty($area))
-            <nav class="subnav" aria-label="{{ $area === 'my' ? 'Your account' : 'Management' }}">
+            <nav @class(['subnav', 'account-subnav' => $area === 'my']) aria-label="{{ $area === 'my' ? 'Your account' : 'Management' }}">
                 @php
                     $links = $area === 'my'
                         ? ['bookings' => ['/bookings', 'My Bookings'], 'credits' => ['/credits', 'Credits Wallet'], 'profile' => ['/profile', 'Profile']]
@@ -51,7 +46,7 @@
                 @endphp
                 @foreach($links as $key => [$path, $label])
                     @unless(str_contains($path, '{'))
-                        <a @if(request()->routeIs("$area.$key")) aria-current="page" @endif href="{{ route("$area.$key") }}">{{ $label }}</a>
+                        <a @if(request()->routeIs("$area.$key") || ($area === 'my' && $key === 'bookings' && request()->routeIs('my.booking', 'book.confirmation', 'book.review'))) aria-current="page" @endif href="{{ route("$area.$key") }}">{{ $label }}</a>
                     @endunless
                 @endforeach
             </nav>

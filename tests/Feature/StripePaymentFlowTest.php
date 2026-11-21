@@ -8,12 +8,14 @@ use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\BookingFinalizationService;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use Stripe\StripeClient;
 use Tests\TestCase;
 
@@ -60,7 +62,7 @@ class StripePaymentFlowTest extends TestCase
         try {
             (new PaymentService(new StripeClient('sk_test_mock')))->createCheckoutSession($booking, $customer);
             $this->fail('Unfunded credits were accepted.');
-        } catch (\Illuminate\Validation\ValidationException $exception) {
+        } catch (ValidationException $exception) {
             $this->assertArrayHasKey('amount', $exception->errors());
         }
         $this->assertSame('1.00', $customer->fresh()->credit_balance);
@@ -71,6 +73,13 @@ class StripePaymentFlowTest extends TestCase
     public function test_success_webhook_marks_payment_once_when_the_event_is_repeated(): void
     {
         config()->set('services.stripe.webhook_secret', 'whsec_test_secret');
+        app()->instance(BookingFinalizationService::class, new class
+        {
+            public function finalize(Booking $booking): void
+            {
+                $booking->update(['status' => 'confirmed']);
+            }
+        });
         [, , $booking] = $this->makeCustomerAndBooking();
         $payment = $this->makePayment($booking, 'pi_success_123');
         $payload = $this->eventPayload('evt_success_1', 'payment_intent.succeeded', 'pi_success_123', $booking);

@@ -147,12 +147,27 @@ class PaymentController
                 ->with('status', 'Stripe could not verify the payment. No payment was recorded.');
         }
 
-        $paymentService->markPaid(
+        $outcome = $paymentService->markPaidWithOutcome(
             $paymentIntentId,
             (int) $booking->getKey(),
             (int) $customer->getKey(),
             $amountJod,
         );
+
+        if ($outcome === PaymentService::PAID_REFUNDED) {
+            return redirect()->route('my.bookings')
+                ->with('status', 'Your payment was refunded because the booking could not be completed. See My Bookings for your reservations.');
+        }
+
+        if ($outcome === PaymentService::PAID_REFUND_FAILED) {
+            return redirect()->route('my.bookings')
+                ->with('status', 'We could not complete the booking or refund your payment. Please contact support.');
+        }
+
+        if ($outcome === PaymentService::PAID_IGNORED) {
+            return redirect()->route('my.bookings')
+                ->with('status', 'We could not confirm the payment result. Please contact support.');
+        }
 
         return redirect()->route('book.confirmation', ['booking_id' => $booking->getKey()])
             ->with('status', 'Payment confirmed. Your booking is being finalized.');

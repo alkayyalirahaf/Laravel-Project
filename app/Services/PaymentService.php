@@ -10,9 +10,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\StripeClient;
+use Throwable;
 
 class PaymentService
 {
+    public const PAID_CONFIRMED = 'confirmed';
+
+    public const PAID_ALREADY_CONFIRMED = 'already_confirmed';
+
+    public const PAID_REFUNDED = 'refunded';
+
+    public const PAID_REFUND_FAILED = 'refund_failed';
+
+    public const PAID_IGNORED = 'ignored';
+
     public function __construct(private readonly ?StripeClient $stripeClient = null) {}
 
     /** Return the payable booking amount as integer JOD piastres. */
@@ -194,7 +205,21 @@ class PaymentService
         ?int $customerId = null,
         ?string $amountJod = null,
     ): bool {
-        return DB::transaction(function () use ($paymentIntentId, $bookingId, $customerId, $amountJod): bool {
+        return in_array($this->markPaidWithOutcome($paymentIntentId, $bookingId, $customerId, $amountJod), [
+            self::PAID_CONFIRMED,
+            self::PAID_REFUNDED,
+            self::PAID_REFUND_FAILED,
+        ], true);
+    }
+
+    /** Process a verified Stripe success and refund it if booking finalization fails. */
+    public function markPaidWithOutcome(
+        string $paymentIntentId,
+        ?int $bookingId = null,
+        ?int $customerId = null,
+        ?string $amountJod = null,
+    ): string {
+        $result = DB::transaction(function () use ($paymentIntentId, $bookingId, $customerId, $amountJod): array {
             $payment = Payment::query()
                 ->where('stripe_payment_intent_id', $paymentIntentId)
                 ->lockForUpdate()
@@ -203,7 +228,7 @@ class PaymentService
             $resolvedBookingId = $payment?->booking_id ?? $bookingId;
 
             if ($resolvedBookingId === null) {
-                return false;
+                return ['outcome' => self::PAID_IGNORED];
             }
 
             $bookingQuery = Booking::query()->whereKey($resolvedBookingId)->lockForUpdate();
@@ -215,12 +240,30 @@ class PaymentService
             $booking = $bookingQuery->first();
 
             if ($booking === null) {
-                return false;
+                return ['outcome' => self::PAID_IGNORED];
             }
 
             if (($bookingId !== null && (int) $booking->getKey() !== $bookingId)
                 || ($customerId !== null && (int) $booking->customer_id !== $customerId)) {
-                return false;
+                return ['outcome' => self::PAID_IGNORED];
+            }
+
+            if ($payment === null) {
+                // Recheck the intent after locking its booking so concurrent events cannot create two rows.
+                $payment = Payment::query()
+                    ->where('stripe_payment_intent_id', $paymentIntentId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($payment !== null && (int) $payment->booking_id !== (int) $booking->getKey()) {
+                    return ['outcome' => self::PAID_IGNORED];
+                }
+            }
+
+            if ($payment !== null
+                && in_array($payment->status, ['paid', 'succeeded'], true)
+                && $booking->status === 'confirmed') {
+                return ['outcome' => self::PAID_ALREADY_CONFIRMED];
             }
 
             $otherSucceededPayment = Payment::query()
@@ -234,56 +277,124 @@ class PaymentService
                 ->first();
 
             if ($otherSucceededPayment !== null) {
-                Log::warning('Ignoring a second successful Stripe payment for a booking.', [
-                    'booking_id' => $booking->getKey(),
-                    'existing_payment_id' => $otherSucceededPayment->getKey(),
-                    'stripe_payment_intent_id' => $paymentIntentId,
-                ]);
+                $this->markPaymentFailedForRefund($booking, $payment, $paymentIntentId, $amountJod);
 
-                return false;
+                return [
+                    'outcome' => 'refund_required',
+                    'booking_id' => (int) $booking->getKey(),
+                    'reason' => 'another_payment_succeeded',
+                ];
             }
 
-            if ($booking->status !== 'pending' && !($booking->status === 'cancelled' && str_starts_with($booking->code, 'YTB'))) {
-                return false;
+            if ($booking->status !== 'pending') {
+                $this->markPaymentFailedForRefund($booking, $payment, $paymentIntentId, $amountJod);
+
+                return [
+                    'outcome' => 'refund_required',
+                    'booking_id' => (int) $booking->getKey(),
+                    'reason' => 'booking_not_pending',
+                ];
             }
 
             if ($payment === null) {
-                // Recheck the intent after locking the booking so concurrent duplicate events create one row.
-                $payment = Payment::query()
-                    ->where('stripe_payment_intent_id', $paymentIntentId)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($payment !== null && (int) $payment->booking_id !== (int) $booking->getKey()) {
-                    return false;
-                }
-
-                $payment ??= $booking->payments()->create([
+                $payment = $booking->payments()->create([
                     'stripe_payment_intent_id' => $paymentIntentId,
                     'amount' => $amountJod ?? $this->amountDueJod($booking),
                     'status' => 'pending',
                 ]);
             }
 
-            if (in_array($payment->status, ['paid', 'succeeded'], true)) {
-                return false;
-            }
-
-            // The existing payments.status enum uses "succeeded" (not "paid").
+            // The finalizer requires a succeeded payment; the enclosing transaction rolls
+            // this temporary success back if the booking cannot be confirmed.
             $payment->amount = $amountJod ?? $this->amountDueJod($booking);
             $payment->status = 'succeeded';
             $payment->paid_at = now();
+            $payment->save();
+
+            try {
+                $this->finalizeBookingHook($booking);
+            } catch (Throwable $exception) {
+                $this->markPaymentFailedForRefund($booking, $payment, $paymentIntentId, $amountJod);
+
+                return [
+                    'outcome' => 'refund_required',
+                    'booking_id' => (int) $booking->getKey(),
+                    'reason' => 'finalization_threw',
+                    'exception_class' => $exception::class,
+                ];
+            }
+
+            $booking->refresh();
+
+            if ($booking->status !== 'confirmed') {
+                $this->markPaymentFailedForRefund($booking, $payment, $paymentIntentId, $amountJod);
+
+                return [
+                    'outcome' => 'refund_required',
+                    'booking_id' => (int) $booking->getKey(),
+                    'reason' => 'booking_not_confirmed',
+                ];
+            }
+
             $payment->receipt_number ??= 'YT-'.strtoupper(bin2hex(random_bytes(12)));
             $payment->save();
 
-            if ($booking->status === 'cancelled') {
-                Log::warning('Payment received for a cancelled booking. Refund review is required.', ['booking_id' => $booking->id]);
-            }
-
-            $this->finalizeBookingHook($booking);
-
-            return true;
+            return ['outcome' => self::PAID_CONFIRMED];
         });
+
+        if (($result['outcome'] ?? null) !== 'refund_required') {
+            return $result['outcome'] ?? self::PAID_IGNORED;
+        }
+
+        $context = [
+            'booking_id' => $result['booking_id'],
+            'stripe_payment_intent_id' => $paymentIntentId,
+            'reason' => $result['reason'],
+        ];
+
+        if (isset($result['exception_class'])) {
+            $context['exception_class'] = $result['exception_class'];
+        }
+
+        Log::error('Stripe payment could not be finalized; issuing a full refund.', $context);
+
+        try {
+            $this->stripe()->refunds->create(
+                ['payment_intent' => $paymentIntentId],
+                ['idempotency_key' => 'refund_'.$paymentIntentId],
+            );
+        } catch (Throwable $exception) {
+            Log::critical('Stripe refund failed after booking finalization failure.', [
+                'booking_id' => $result['booking_id'],
+                'stripe_payment_intent_id' => $paymentIntentId,
+                'exception_class' => $exception::class,
+            ]);
+
+            return self::PAID_REFUND_FAILED;
+        }
+
+        return self::PAID_REFUNDED;
+    }
+
+    private function markPaymentFailedForRefund(
+        Booking $booking,
+        ?Payment $payment,
+        string $paymentIntentId,
+        ?string $amountJod,
+    ): void {
+        $payment ??= $booking->payments()->create([
+            'stripe_payment_intent_id' => $paymentIntentId,
+            'amount' => $amountJod ?? $this->amountDueJod($booking),
+            'status' => 'failed',
+            'receipt_number' => null,
+            'paid_at' => null,
+        ]);
+
+        $payment->amount = $amountJod ?? $this->amountDueJod($booking);
+        $payment->status = 'failed';
+        $payment->receipt_number = null;
+        $payment->paid_at = null;
+        $payment->save();
     }
 
     /** Mark a failed intent without ever downgrading an already successful payment. */
