@@ -305,3 +305,9 @@ Route::prefix('airline')->name('airline.')->middleware('role.airline-admin')->gr
     // C6: Reviews
     Route::get('/reviews', [AirlineReviewController::class, 'index'])->name('reviews');
 });
+
+use App\Http\Controllers\Customer\PassportScanController;
+
+Route::post('/book/passport-scan', PassportScanController::class)
+    ->middleware('throttle:10,1')
+    ->name('book.passport-scan');
