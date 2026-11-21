@@ -32,7 +32,7 @@
     @foreach(['depart' => 'Departure date', 'return' => 'Return date (round trip only)'] as $name => $label)
         <div class="col-md-4">
             <label class="form-label" for="{{ $name }}">{{ $label }}</label>
-            <input class="input-control" type="date" id="{{ $name }}" name="{{ $name }}" value="{{ old($name, $filters[$name] ?? '') }}" @required($name === 'depart' && empty($optionalFilters))>
+            <input class="input-control" type="date" id="{{ $name }}" name="{{ $name }}" min="{{ now('Asia/Amman')->toDateString() }}" value="{{ old($name, $filters[$name] ?? '') }}" @required($name === 'depart' && empty($optionalFilters))>
         </div>
     @endforeach
     <div class="col-md-3">

@@ -49,7 +49,7 @@ if (form) {
     const travelers = ['adults', 'youth', 'children', 'infants'].map((name) => form.elements[name]);
     const today = new Date();
     today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-    depart.min = today.toISOString().slice(0, 10);
+    depart.min ||= today.toISOString().slice(0, 10);
     const single = form.querySelector('[data-single-trip]');
     const multi = form.querySelector('[data-multi-trip]');
     const legs = [...multi.querySelectorAll('[data-trip-leg]')];
@@ -76,7 +76,7 @@ if (form) {
         returnDate.closest('.return-date').hidden = !roundTrip;
         returnDate.disabled = !roundTrip;
         returnDate.required = roundTrip;
-        returnDate.min = depart.value || depart.min;
+        returnDate.min = depart.value > depart.min ? depart.value : depart.min;
         to.setCustomValidity(from.value && from.value === to.value ? form.dataset.swapError : '');
         const count = travelers.reduce((total, field) => total + Number(field.value), 0);
         for (const field of travelers) {

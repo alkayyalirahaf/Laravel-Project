@@ -1,4 +1,5 @@
 import './bootstrap';
+import './date-constraints';
 
 document.querySelectorAll('[data-airline-image]').forEach((image) => {
     const hideFailedImage = () => {
