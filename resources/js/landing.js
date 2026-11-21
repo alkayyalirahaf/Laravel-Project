@@ -49,7 +49,7 @@ if (form) {
     const travelers = ['adults', 'youth', 'children', 'infants'].map((name) => form.elements[name]);
     const today = new Date();
     today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-    depart.min = today.toISOString().slice(0, 10);
+    depart.min ||= today.toISOString().slice(0, 10);
     const single = form.querySelector('[data-single-trip]');
     const multi = form.querySelector('[data-multi-trip]');
     const legs = [...multi.querySelectorAll('[data-trip-leg]')];
@@ -76,7 +76,7 @@ if (form) {
         returnDate.closest('.return-date').hidden = !roundTrip;
         returnDate.disabled = !roundTrip;
         returnDate.required = roundTrip;
-        returnDate.min = depart.value || depart.min;
+        returnDate.min = depart.value > depart.min ? depart.value : depart.min;
         to.setCustomValidity(from.value && from.value === to.value ? form.dataset.swapError : '');
         const count = travelers.reduce((total, field) => total + Number(field.value), 0);
         for (const field of travelers) {
@@ -125,11 +125,12 @@ for (const button of promptButtons) {
     });
 }
 
-const cabinOptions = document.querySelector('.cabin-options');
-if (cabinOptions) {
+const cabinPreview = document.querySelector('#cabins');
+if (cabinPreview) {
+    const cabinOptions = cabinPreview.querySelector('.cabin-options');
     const showCabin = () => {
         const selected = cabinOptions.querySelector(':checked').value;
-        for (const figure of document.querySelectorAll('[data-cabin]')) {
+        for (const figure of cabinPreview.querySelectorAll('[data-cabin]')) {
             figure.hidden = figure.dataset.cabin !== selected;
         }
     };
@@ -273,4 +274,10 @@ for (const photo of document.querySelectorAll('[data-destination-photo]')) {
     };
     photo.addEventListener('error', showTextCard, { once: true });
     if (photo.complete && !photo.naturalWidth) showTextCard();
+}
+
+for (const photo of document.querySelectorAll('[data-directory-photo]')) {
+    const showFallback = () => { photo.hidden = true; };
+    photo.addEventListener('error', showFallback, { once: true });
+    if (photo.complete && !photo.naturalWidth) showFallback();
 }

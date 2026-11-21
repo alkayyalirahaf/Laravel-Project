@@ -25,6 +25,8 @@ use App\Http\Controllers\SuperAdmin\CityController;
 use App\Http\Controllers\SuperAdmin\CountryController;
 use App\Http\Controllers\SuperAdmin\CreditController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
+use App\Http\Controllers\SuperAdmin\FlightController as AdminFlightController;
+use App\Http\Controllers\SuperAdmin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Middleware\SetLandingLocale;
 use Illuminate\Http\Request;
@@ -39,6 +41,19 @@ use App\Http\Controllers\SuperAdmin\ReviewModerationController;
 use App\Http\Controllers\SuperAdmin\AiConversationController as AdminAiConversationController;
 use App\Http\Controllers\SuperAdmin\NotificationLogController;
 use App\Http\Controllers\SuperAdmin\ContactMessageController as AdminContactMessageController;
+
+
+
+
+
+use App\Http\Controllers\AirlineAdmin\DashboardController as AirlineDashboardController;
+use App\Http\Controllers\AirlineAdmin\FlightController as AirlineFlightController;
+use App\Http\Controllers\AirlineAdmin\BookingController as AirlineBookingController;
+use App\Http\Controllers\AirlineAdmin\ReviewController as AirlineReviewController;
+
+
+
+
 
 
 
@@ -164,16 +179,21 @@ $registerPanelRoutes = function (string $area, string $view, array $navigation) 
     $middleware = $area === 'admin' ? 'role.super-admin' : 'role.airline-admin';
     Route::middleware($middleware)->group(function () use ($area, $view, $navigation) {
         foreach ($navigation as $screen => $page) {
-            if ($area === 'admin' && in_array($screen, ['dashboard', 'countries', 'cities', 'airports', 'credits', 'bookings', 'booking'], true)) {
-                continue;
-            }
-            [$path, $title] = $page;
-
             if ($area === 'admin' && in_array($screen, [
+                'dashboard', 'countries', 'cities', 'airports', 'credits', 'bookings', 'booking',
                 'airlines', 'airline-admins', 'customers', 'reviews', 'ai-conversations', 'notifications', 'messages',
+                'flights', 'payments',
             ], true)) {
                 continue;
             }
+
+            if ($area === 'airline' && in_array($screen, [
+                'dashboard', 'flights', 'create', 'edit', 'flight', 'bookings', 'booking', 'reviews',
+            ], true)) {
+                continue;
+            }
+
+            [$path, $title] = $page;
 
             Route::view("/{$area}{$path}", $view, [
                 'area' => $area,
@@ -197,7 +217,8 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
     Route::get('/bookings/{id}', [SuperAdminBookingController::class, 'show'])->whereNumber('id')->name('booking');
     Route::get('/credits', [CreditController::class, 'index'])->name('credits');
     Route::post('/credits/{customer}', [CreditController::class, 'update'])->whereNumber('customer')->name('credits.update');
-
+    Route::get('/flights', [AdminFlightController::class, 'index'])->name('flights');
+    Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments');
     Route::resource('cities', CityController::class)->except('show')->names(['index' => 'cities']);
 
     Route::get('/airports', [AirportController::class, 'index'])->name('airports');
@@ -255,3 +276,32 @@ Route::prefix('admin')->name('admin.')->middleware('role.super-admin')->group(fu
 });
 
 
+
+
+// 1. Exclude these screens from $registerPanelRoutes when $area === 'airline':
+// ['flights', 'create', 'edit', 'flight']  (and later: 'dashboard', 'bookings', 'booking', 'reviews')
+
+// 2. Airline Admin Routes (C0 - C6)
+Route::prefix('airline')->name('airline.')->middleware('role.airline-admin')->group(function () {
+    Route::post('/logout', [AirlineAdminSessionController::class, 'destroy'])->name('logout');
+
+    // C1: Dashboard
+    Route::get('/', [AirlineDashboardController::class, 'index'])->name('dashboard');
+
+    // C2, C3, C4: Flights & Seat Inventory (Tested & Ready)
+    Route::get('/flights', [AirlineFlightController::class, 'index'])->name('flights');
+    Route::get('/flights/create', [AirlineFlightController::class, 'create'])->name('create');
+    Route::post('/flights', [AirlineFlightController::class, 'store'])->name('store');
+    Route::get('/flights/{flight}', [AirlineFlightController::class, 'show'])->whereNumber('flight')->name('flight');
+    Route::get('/flights/{flight}/edit', [AirlineFlightController::class, 'edit'])->whereNumber('flight')->name('edit');
+    Route::put('/flights/{flight}', [AirlineFlightController::class, 'update'])->whereNumber('flight')->name('update');
+    Route::delete('/flights/{flight}', [AirlineFlightController::class, 'destroy'])->whereNumber('flight')->name('destroy');
+
+    // C5a, C5b: Bookings & Cancellation
+    Route::get('/bookings', [AirlineBookingController::class, 'index'])->name('bookings');
+    Route::get('/bookings/{booking}', [AirlineBookingController::class, 'show'])->whereNumber('booking')->name('booking');
+    Route::post('/bookings/{booking}/cancel', [AirlineBookingController::class, 'cancel'])->whereNumber('booking')->name('bookings.cancel');
+
+    // C6: Reviews
+    Route::get('/reviews', [AirlineReviewController::class, 'index'])->name('reviews');
+});

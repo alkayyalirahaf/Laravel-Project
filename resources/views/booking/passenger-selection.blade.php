@@ -44,7 +44,7 @@
                         @error('passengers.'.$index.'.passport_country')<small class="error">{{ $message }}</small>@enderror
                     </div>
                     <div>
-                        <x-travel-field :name="'passengers['.$index.'][passport_expiry]'" label="Passport expiry" :value="old('passengers.'.$index.'.passport_expiry', $draft['passengers'][$index]['passport_expiry'] ?? null)" type="date" required />
+                        <x-travel-field :name="'passengers['.$index.'][passport_expiry]'" label="Passport expiry" :value="old('passengers.'.$index.'.passport_expiry', $draft['passengers'][$index]['passport_expiry'] ?? null)" :min="collect($cabins)->max(fn ($cabin) => $cabin->flight->departure_at->toDateString())" type="date" required />
                         @error('passengers.'.$index.'.passport_expiry')<small class="error">{{ $message }}</small>@enderror
                     </div>
                     <div>

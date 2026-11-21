@@ -101,7 +101,7 @@ class FlightController
             'flight_number' => ['required', 'string', 'max:10'],
             'origin_airport_id' => ['required', 'exists:airports,id'],
             'destination_airport_id' => ['required', 'exists:airports,id', 'different:origin_airport_id'],
-            'departure_at' => ['required', 'date'],
+            'departure_at' => ['required', 'date', 'after:now'],
             'arrival_at' => ['required', 'date', 'after:departure_at'],
             'stops' => ['required', 'integer', 'min:0', 'max:10'],
             'status' => ['required', Rule::in(['scheduled', 'delayed', 'cancelled', 'completed'])],

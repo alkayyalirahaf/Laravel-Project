@@ -2,15 +2,22 @@
 
 @section('title', __('Find your next flight'))
 @section('body-class', 'landing')
+@section('display-font')
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,500..700;1,500..700&amp;display=swap">
+@endsection
 
 @section('navigation')
-    <a href="#flight-search">{{ __('Flights') }}</a>
-    <a href="#destinations">{{ __('Destinations') }}</a>
-    <a href="#ai-copilot">{{ __('AI Assistant') }}</a>
-    <a href="#how-it-works">{{ __('How It Works') }}</a>
-    <x-landing-language />
-    <a href="{{ route('login') }}">{{ __('Sign In') }}</a>
-    <a class="button" href="#flight-search">{{ __('Find a Flight') }}</a>
+    <div class="landing-nav-links">
+        <a href="#flight-search">{{ __('Flights') }}</a>
+        <a href="#destinations">{{ __('Destinations') }}</a>
+        <a href="#ai-copilot">{{ __('AI Assistant') }}</a>
+        <a href="#how-it-works">{{ __('How It Works') }}</a>
+    </div>
+    <div class="landing-nav-actions">
+        <x-landing-language />
+        <x-nav-account />
+        <a class="button landing-nav-book" href="#flight-search">{{ __('Find a Flight') }}</a>
+    </div>
 @endsection
 
 @php
@@ -25,17 +32,13 @@
         </video>
     </div>
     <div class="landing-wrap hero-copy">
-        <h1 id="landing-title">{{ __('Your next chapter starts') }} <em>{{ __('above the clouds.') }}</em></h1>
-        <p>{{ __('Find your flight, discover new destinations, and plan your journey with a little help from AI.') }}</p>
+        <h1 id="landing-title">{{ __('Your next flight') }} <span>{{ __('starts here.') }}</span></h1>
+        <p>{{ __('Search flights and compare fares, or plan your trip with our AI assistant.') }}</p>
         <div class="actions">
             <a class="button" href="#flight-search">{{ __('Explore Flights') }} <span aria-hidden="true">↗</span></a>
             <a class="button secondary" href="#ai-copilot">{{ __('Meet Your AI Copilot') }}</a>
         </div>
     </div>
-    <svg class="hero-trajectory" viewBox="0 0 420 145" fill="none" aria-hidden="true">
-        <path d="M2 142Q220 -18 418 15" stroke="currentColor" stroke-width="1"/>
-        <circle cx="418" cy="15" r="2.5" fill="currentColor"/>
-    </svg>
 </section>
 
 <div class="landing-journey">
@@ -112,7 +115,7 @@
 <section class="landing-wrap landing-section landing-split" id="cabins" data-reveal>
     <div>
         <h2>{{ __('Choose how') }} <em>{{ __('you fly.') }}</em></h2>
-        <p>{{ __('Compare cabin fares, baggage allowances, and seat availability for your selected flight. Options vary by airline and fare.') }}</p>
+        <p>{{ __('Choose a cabin and try selecting a seat. Your actual seat is selected during booking.') }}</p>
         <fieldset class="cabin-options">
             <legend class="sr-only">{{ __('Preview a cabin class') }}</legend>
             @foreach(['Economy' => 6, 'Business' => 4, 'First' => 2] as $cabin => $columns)
@@ -124,37 +127,57 @@
         @foreach(['Economy' => 6, 'Business' => 4, 'First' => 2] as $cabin => $columns)
             <figure data-cabin="{{ strtolower($cabin) }}" @if(!$loop->first) hidden @endif>
                 <figcaption><strong>{{ __($cabin) }}</strong><span>{{ __('Illustrative seat map') }}</span></figcaption>
-                <div class="seat-grid" style="--seat-columns: {{ $columns }}" aria-hidden="true">
+                <fieldset class="seat-grid" style="--seat-columns: {{ $columns }}" dir="ltr">
+                    <legend class="sr-only">{{ __('Choose a seat') }}</legend>
                     @foreach(range(1, 4) as $row)
                         @foreach(range(1, $columns) as $seat)
-                            <span @class(['seat', 'seat-accent' => $row === 2 && $seat === 1])></span>
+                            @php($seatNumber = $row.chr(64 + $seat))
+                            <label>
+                                <input class="sr-only" type="radio" name="preview-seat-{{ strtolower($cabin) }}" value="{{ $seatNumber }}" @disabled($row === 2 && $seat === 1)>
+                                <span class="seat">{{ $seatNumber }}</span>
+                            </label>
                             @if($seat === $columns / 2)<span class="seat-aisle">{{ $row }}</span>@endif
                         @endforeach
                     @endforeach
-                </div>
+                </fieldset>
+                <ul class="preview-seat-legend">
+                    <li>{{ __('Available') }}</li>
+                    <li>{{ __('Selected') }}</li>
+                    <li>{{ __('Unavailable') }}</li>
+                </ul>
                 <a class="landing-text-link" href="{{ route('flights.search', ['cabin' => strtolower($cabin)]) }}">{{ __('Compare :cabin flights', ['cabin' => app()->isLocale('ar') ? __($cabin) : strtolower($cabin)]) }} ↗</a>
             </figure>
         @endforeach
     </div>
 </section>
 
-<section class="landing-finale" data-reveal>
-    <div class="landing-wrap">
-        <h2>{{ __('The world is waiting.') }} <em>{{ __('Where to next?') }}</em></h2>
-        <a class="button" href="#flight-search">{{ __('Find Your Flight') }} ↗</a>
-    </div>
-</section>
 @endsection
 
 @section('footer-links')
-    <p>{{ __('Find a flight worth looking forward to.') }}</p>
-    <nav aria-label="{{ __('Footer') }}">
-        <a href="#flight-search">{{ __('Flights') }}</a>
-        <a href="#destinations">{{ __('Destinations') }}</a>
-        <a href="{{ route('assistant') }}">{{ __('AI Assistant') }}</a>
-        <a href="{{ route('booking.lookup') }}">{{ __('Booking lookup') }}</a>
-        @foreach(['contact' => 'Contact', 'terms' => 'Terms', 'privacy' => 'Privacy'] as $name => $label)
-            <a href="{{ route($name) }}">{{ __($label) }}</a>
-        @endforeach
+    <nav class="landing-footer-links" aria-label="{{ __('Footer') }}">
+        <section aria-labelledby="footer-travel">
+            <h2 id="footer-travel">{{ __('Plan your trip') }}</h2>
+            <ul>
+                <li><a href="#flight-search">{{ __('Flights') }}</a></li>
+                <li><a href="{{ route('destinations') }}">{{ __('Destinations') }}</a></li>
+                <li><a href="{{ route('assistant') }}">{{ __('AI Assistant') }}</a></li>
+            </ul>
+        </section>
+        <section aria-labelledby="footer-help">
+            <h2 id="footer-help">{{ __('Help') }}</h2>
+            <ul>
+                <li><a href="{{ route('booking.lookup') }}">{{ __('Booking lookup') }}</a></li>
+                <li><a href="{{ route('faq') }}">{{ __('FAQ') }}</a></li>
+                <li><a href="{{ route('contact') }}">{{ __('Contact') }}</a></li>
+            </ul>
+        </section>
+        <section aria-labelledby="footer-legal">
+            <h2 id="footer-legal">{{ __('Legal') }}</h2>
+            <ul>
+                <li><a href="{{ route('terms') }}">{{ __('Terms') }}</a></li>
+                <li><a href="{{ route('privacy') }}">{{ __('Privacy') }}</a></li>
+            </ul>
+        </section>
     </nav>
+    <p class="landing-footer-copyright">© {{ now()->year }} Yalla Teer</p>
 @endsection

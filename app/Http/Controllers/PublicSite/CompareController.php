@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\PublicSite;
 
-use Illuminate\Http\Request;
 use App\Services\FlightSearchService;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class CompareController
@@ -19,7 +19,7 @@ class CompareController
 
             $flights = $search->availableFlights()->whereIn('id', $data['flights'])
                 ->with(['airline', 'originAirport', 'destinationAirport', 'flightClasses' => fn ($query) => $query->withCount([
-                    'seats as available_seats_count' => fn ($seats) => $seats->where('status', 'available'),
+                    'seats as available_seats_count' => fn ($seats) => $seats->availableForBooking(),
                 ])->orderBy('price')])->get();
 
             if ($flights->count() !== count($data['flights'])) {

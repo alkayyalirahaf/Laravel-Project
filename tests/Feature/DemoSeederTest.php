@@ -31,7 +31,7 @@ class DemoSeederTest extends TestCase
             $counts[$table] = DB::table($table)->count();
             $this->assertGreaterThan(0, $counts[$table], $table);
         }
-        $this->assertSame(462, Flight::count());
+        $this->assertSame(468, Flight::count());
         $this->assertSame(16, Booking::count());
         $user = User::where('email', 'traveler@demo.example.test')->firstOrFail();
         $this->assertTrue(Hash::check(DemoSeeder::PASSWORD, $user->password));
@@ -56,6 +56,27 @@ class DemoSeederTest extends TestCase
         $this->get('/my/credits')->assertOk();
         $this->get('/assistant')->assertOk()->assertSee('planning a Dubai trip');
         $this->get('/flights?from=AMM&to=DXB&depart='.today()->addDays(3)->toDateString().'&trip=one_way')->assertOk()->assertSee('Royal Jordanian')->assertSee('Emirates');
+        $search = [
+            'from' => 'AMM', 'to' => 'DXB', 'depart' => today()->addDay()->toDateString(),
+            'return' => today()->addDays(10)->toDateString(), 'trip' => 'round_trip',
+            'adults' => 1, 'cabin' => 'economy', 'min_price' => 0, 'budget' => 115,
+        ];
+        $outbound = [
+            'departure_asc' => ['RJD000O', 'TKQA101', 'EKD001O'],
+            'departure_desc' => ['EKD001O', 'TKQA101', 'RJD000O'],
+            'price_asc' => ['TKQA101', 'RJD000O', 'EKD001O'],
+            'price_desc' => ['EKD001O', 'RJD000O', 'TKQA101'],
+        ];
+        foreach ($outbound as $sort => $numbers) {
+            $this->get(route('flights.search', $search + ['sort' => $sort]))
+                ->assertOk()->assertSeeInOrder($numbers)->assertDontSee('EKQA102')->assertDontSee('TKD002O');
+        }
+        $offers = Flight::whereIn('flight_number', $outbound['departure_asc'])->whereDate('departure_at', $search['depart'])->get();
+        $selected = $offers->firstWhere('flight_number', 'TKQA101')->flightClasses()->firstOrFail();
+        $this->get(route('flights.search', $search + ['leg' => 'return', 'outbound_class_id' => $selected->id, 'sort' => 'departure_desc']))
+            ->assertOk()->assertSeeInOrder(['TKQA203', 'EKQA202', 'RJQA201'])->assertDontSee('RJQA204');
+        $this->get(route('compare', ['flights' => $offers->modelKeys()]))
+            ->assertOk()->assertSee('Royal Jordanian')->assertSee('Emirates')->assertSee('Turkish Airlines');
         $admin = User::where('email', 'admin@demo.example.test')->firstOrFail();
         $this->actingAs($admin)->get('/admin')->assertOk();
         $this->get('/admin/bookings')->assertOk();

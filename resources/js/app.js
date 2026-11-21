@@ -1,4 +1,14 @@
 import './bootstrap';
+import './date-constraints';
+
+document.querySelectorAll('[data-airline-image]').forEach((image) => {
+    const hideFailedImage = () => {
+        (image.closest('[data-airline-photo]') ?? image).hidden = true;
+    };
+
+    image.addEventListener('error', hideFailedImage, { once: true });
+    if (image.complete && !image.naturalWidth) hideFailedImage();
+});
 
 const menu = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#primary-nav');
@@ -25,11 +35,13 @@ if (menu && navigation) {
 document.querySelectorAll('[data-compare]').forEach((form) => {
     const choices = [...form.elements].filter((field) => field.type === 'checkbox');
     const status = form.querySelector('[data-compare-status]');
+    const submit = form.querySelector('button[type="submit"]');
 
     if (!status) return;
 
     const update = () => {
         const selected = choices.filter((choice) => choice.checked).length;
+        submit.disabled = selected < 2;
         status.textContent = selected ? `${selected} selected (choose 2 or 3).` : 'Select 2 or 3 flights.';
         for (const choice of choices) {
             choice.disabled = !choice.checked && selected >= 3;

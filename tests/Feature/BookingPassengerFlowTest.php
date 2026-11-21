@@ -184,7 +184,8 @@ class BookingPassengerFlowTest extends TestCase
         $other->customer()->create(['credit_balance' => 0]);
         $ticket = Ticket::firstOrFail();
         $this->actingAs($user)->get(route('my.ticket', $ticket->ticket_number))
-            ->assertOk()->assertSee('Print / Save as PDF')->assertSee($ticket->ticket_number);
+            ->assertOk()->assertSee('aria-label="Print"', false)->assertSee('aria-label="Download PDF"', false)
+            ->assertSee($ticket->ticket_number);
         $this->actingAs($other)->get(route('my.ticket', $ticket->ticket_number))->assertNotFound();
         $this->get(route('my.booking', $booking->code))->assertNotFound();
 
