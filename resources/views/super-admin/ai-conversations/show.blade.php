@@ -1,9 +1,15 @@
 @extends('super-admin.management-layout')
 @section('admin-title', 'AI conversation details')
 @section('admin-content')
+    <a class="btn btn-outline-secondary mb-3" href="{{ route('admin.ai-conversations') }}">← Back to conversations</a>
     <h1>{{ $conversation->title }}</h1>
-    <p>Type: {{ $conversation->type }} | Customer: {{ $conversation->customer?->user?->name ?? 'Guest' }} | Created: {{ $conversation->created_at }}</p>
+    <div class="panel p-3 p-md-4 mb-4">
+        <p class="mb-2"><strong>Type:</strong> {{ ucfirst($conversation->type) }}</p>
+        <p class="mb-2"><strong>Customer:</strong> {{ $conversation->customer?->user?->name ?? 'Guest' }}</p>
+        <p class="mb-0"><strong>Created:</strong> {{ $conversation->created_at?->format('Y-m-d H:i') }}</p>
+    </div>
     <h2>Recommendations</h2>
-    <ul>@forelse($conversation->recommendations as $recommendation)<li>{{ $recommendation->flight?->airline?->name }} {{ $recommendation->flight?->flight_number }} — {{ $recommendation->reason }}</li>@empty<li>No recommendations recorded.</li>@endforelse</ul>
-    <a href="{{ route('admin.ai-conversations') }}">Back to conversations</a>
+    <div class="panel p-3 p-md-4">
+        <ul class="mb-0">@forelse($conversation->recommendations as $recommendation)<li>{{ $recommendation->flight?->airline?->name }} {{ $recommendation->flight?->flight_number }} — {{ $recommendation->reason }}</li>@empty<li>No recommendations recorded.</li>@endforelse</ul>
+    </div>
 @endsection

@@ -1,5 +1,6 @@
-@extends(($admin ?? false) ? 'super-admin.management-layout' : 'layouts.app', ['area' => ($admin ?? false) ? 'admin' : 'my'])
-@section(($admin ?? false) ? 'admin-title' : 'title', $title)
+@extends(($admin ?? false) ? 'super-admin.management-layout' : 'layouts.app', ($admin ?? false) ? [] : ['area' => 'my'])
+@section('title', $title)
+@section('admin-title', $title)
 @section('page-status')
     @unless(request()->routeIs('book.confirmation') && session('status') === 'Payment confirmed. Your booking is being finalized.')
         @parent

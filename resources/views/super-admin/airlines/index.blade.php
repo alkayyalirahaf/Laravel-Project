@@ -2,8 +2,8 @@
 
 @section('airlines-content')
     <div class="d-flex justify-content-between mb-3">
-        <h2>Airline list</h2>
-        <a class="btn btn-primary" href="{{ route('admin.airlines.create') }}">Add airline</a>
+        <h2 class="mb-0">Airline list</h2>
+        <a class="btn btn-primary px-4 py-2" href="{{ route('admin.airlines.create') }}">Add airline</a>
     </div>
 
     <form method="GET" action="{{ route('admin.airlines') }}" class="row g-2 mb-3">
