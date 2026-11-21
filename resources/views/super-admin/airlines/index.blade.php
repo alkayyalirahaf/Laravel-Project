@@ -6,7 +6,7 @@
         <a class="btn btn-primary px-4 py-2" href="{{ route('admin.airlines.create') }}">Add airline</a>
     </div>
 
-    <form method="GET" action="{{ route('admin.airlines') }}" class="row g-2 mb-3">
+    <form method="GET" action="{{ route('admin.airlines') }}" class="row g-2 mb-3 align-items-end">
         <div class="col-md-6"><input class="form-control" name="search" value="{{ request('search') }}" placeholder="Search name or code"></div>
         <div class="col-md-3">
             <select class="form-select" name="status">

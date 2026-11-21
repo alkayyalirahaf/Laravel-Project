@@ -30,6 +30,6 @@ class FlightController
 
         $airlines = Airline::query()->orderBy('name')->get(['id', 'name', 'code']);
 
-        return view('super-admin.flights.index', compact('flights', 'airlines'));
+        return view('super-admin.flights.index', compact('flights', 'airlines', 'filters'));
     }
 }
