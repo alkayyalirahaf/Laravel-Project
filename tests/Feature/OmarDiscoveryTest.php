@@ -400,7 +400,7 @@ class OmarDiscoveryTest extends TestCase
     {
         $this->assertTrue(interface_exists(PassportExtraction::class));
         $this->assertTrue(interface_exists(PrePaymentCheck::class));
-        $this->assertFalse(app()->bound(PassportExtraction::class));
+        $this->assertTrue(app()->bound(PassportExtraction::class));
         $this->assertFalse(app()->bound(PrePaymentCheck::class));
     }
 

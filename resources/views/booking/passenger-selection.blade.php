@@ -17,6 +17,7 @@
             @foreach($travelerTypes as $index => $type)
                 <fieldset class="form-grid passenger-fields">
                     <legend>Passenger {{ $loop->iteration }} · {{ ucfirst($type) }}</legend>
+                    <x-passport-scan :passenger-index="$index" />
                     <div>
                         <x-travel-field :name="'passengers['.$index.'][first_name]'" label="First / given name" :value="old('passengers.'.$index.'.first_name', $draft['passengers'][$index]['first_name'] ?? null)" maxlength="100" required />
                         @error('passengers.'.$index.'.first_name')<small class="error">{{ $message }}</small>@enderror

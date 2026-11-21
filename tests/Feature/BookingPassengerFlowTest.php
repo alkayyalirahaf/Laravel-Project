@@ -6,11 +6,11 @@ use App\Mail\BookingTickets;
 use App\Models\Airline;
 use App\Models\Airport;
 use App\Models\Booking;
-use App\Models\Ticket;
-use App\Services\PaymentService;
 use App\Models\Country;
 use App\Models\Flight;
+use App\Models\Ticket;
 use App\Models\User;
+use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
@@ -52,7 +52,8 @@ class BookingPassengerFlowTest extends TestCase
         $this->get(route('book.passengers'))->assertRedirect(route('login'));
         $this->actingAs($user)->get(route('book.passengers'))->assertRedirect(route('flights.search'));
         $page = $this->withSession(['dev3.search_selection' => $selection])->get(route('book.passengers'));
-        $page->assertOk()->assertSee('TST101')->assertSee('Youth')->assertSee('passengers[1][first_name]');
+        $page->assertOk()->assertSee('TST101')->assertSee('Youth')->assertSee('passengers[1][first_name]')
+            ->assertSee('Optional passport scan');
         $selectionId = $page->viewData('selectionId');
         $this->post(route('book.passengers.store'), ['selection_id' => $selectionId])
             ->assertRedirect(route('book.passengers'))->assertSessionHasErrors('passengers');
@@ -60,15 +61,22 @@ class BookingPassengerFlowTest extends TestCase
         $adult = [
             'first_name' => 'Test', 'last_name' => 'Traveler', 'date_of_birth' => '1990-01-01',
             'gender' => 'female', 'nationality' => 'Jordanian', 'passport_number' => 'DEMO123',
-            'passport_country' => 'Jordan', 'passport_expiry' => now()->addYear()->toDateString(),
+            'passport_country' => 'Jordan', 'passport_expiry' => now()->addYear()->toDateString(), 'filled_by_ai' => '1',
         ];
         $youth = array_replace($adult, ['first_name' => 'Young', 'date_of_birth' => now()->subYears(14)->toDateString()]);
+        unset($youth['filled_by_ai']);
+        $unknown = array_replace($adult, ['not_allowed' => 'value']);
+        $this->post(route('book.passengers.store'), [
+            'selection_id' => $selectionId, 'passengers' => [$unknown, $youth], 'contact_email' => $user->email,
+        ])->assertRedirect(route('book.passengers'))->assertSessionHasErrors('passengers.0');
         $this->post(route('book.passengers.store'), [
             'selection_id' => $selectionId, 'passengers' => [$adult, $youth], 'contact_email' => $user->email,
         ])->assertSessionHasNoErrors()->assertRedirect(route('book.seats'));
 
         $draft = Crypt::decrypt(session('dev4.passenger_draft.details'));
         $this->assertSame(['adult', 'youth'], array_column($draft['passengers'], 'type'));
+        $this->assertTrue($draft['passengers'][0]['filled_by_ai']);
+        $this->assertFalse($draft['passengers'][1]['filled_by_ai']);
         $this->get(route('book.passengers'))->assertOk()->assertSee('value="Young"', false);
         $page = $this->get(route('book.seats'))->assertOk()->assertSee('1A');
         $code = $page->viewData('code');
@@ -81,6 +89,9 @@ class BookingPassengerFlowTest extends TestCase
         $payload = ['booking_code' => $code, 'seats' => ['outbound' => $ids]];
         $this->post(route('book.seats.store'), $payload)->assertSessionHasNoErrors();
         $booking = Booking::sole();
+        $savedPassengers = $booking->passengers()->orderBy('id')->get();
+        $this->assertTrue($savedPassengers[0]->filled_by_ai);
+        $this->assertFalse($savedPassengers[1]->filled_by_ai);
         $this->post(route('book.seats.store'), $payload)->assertRedirect(route('book.review', ['booking_id' => $booking->id]));
         $this->assertDatabaseCount('bookings', 1);
         $this->assertSame('pending', $booking->status);
@@ -126,14 +137,21 @@ class BookingPassengerFlowTest extends TestCase
             $cabin->seats()->create(['seat_number' => $number, 'status' => 'available']);
         }
 
+        $invalidAdult = array_replace($adult, ['filled_by_ai' => 'invalid']);
         $this->post(route('book.passengers.store'), [
-            'selection_id' => $selectionId, 'passengers' => [$adult, $youth], 'contact_email' => $user->email,
+            'selection_id' => $selectionId, 'passengers' => [$invalidAdult, $youth], 'contact_email' => $user->email,
+            'filled_by_ai' => '1',
         ])->assertRedirect(route('book.seats'));
+        $invalidDraft = Crypt::decrypt(session('dev4.passenger_draft.details'));
+        $this->assertFalse($invalidDraft['passengers'][0]['filled_by_ai']);
         $ids = $cabin->seats()->where('status', 'available')->pluck('id')->all();
         $this->post(route('book.seats.store'), [
             'booking_code' => session('dev4.passenger_draft.booking_code'), 'seats' => ['outbound' => $ids],
         ])->assertSessionHasNoErrors();
         $cancelled = Booking::latest('id')->firstOrFail();
+        $cancelledPassengers = $cancelled->passengers()->orderBy('id')->get();
+        $this->assertFalse($cancelledPassengers[0]->filled_by_ai);
+        $this->assertFalse($cancelledPassengers[1]->filled_by_ai);
         $this->post(route('my.booking.cancel', $cancelled->code))->assertRedirect(route('my.booking', $cancelled->code));
         $this->assertSame('cancelled', $cancelled->fresh()->status);
         $this->assertSame(2, $cabin->seats()->where('status', 'available')->count());
