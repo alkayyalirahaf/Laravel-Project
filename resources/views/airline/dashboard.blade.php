@@ -3,16 +3,13 @@
 @section('title', 'Airline Dashboard')
 
 @section('flight-content')
-<div class="flight-card">
-    <div><h1>Dashboard</h1><p>Overview of your airline's flights, bookings, and customer feedback.</p></div>
-    <div class="actions">
-        <a class="button secondary" href="{{ route('airline.flights') }}">Flights</a>
-        <a class="button secondary" href="{{ route('airline.bookings') }}">Bookings</a>
-        <a class="button secondary" href="{{ route('airline.reviews') }}">Reviews</a>
-    </div>
-</div>
+<div class="admin-dashboard">
+<header class="airline-dashboard-heading">
+    <h1>Dashboard</h1>
+    <a class="button" href="{{ route('airline.create') }}">Create flight</a>
+</header>
 
-<section class="cards section" aria-label="Airline performance">
+<section class="airline-metrics" aria-label="Airline performance">
     <article class="panel"><p>Total flights</p><h2>{{ number_format($totalFlights) }}</h2></article>
     <article class="panel"><p>Upcoming scheduled flights</p><h2>{{ number_format($upcomingFlightsCount) }}</h2></article>
     <article class="panel"><p>Total bookings</p><h2>{{ number_format($totalBookings) }}</h2></article>
@@ -22,9 +19,9 @@
 </section>
 
 <section class="panel table-wrap section">
-    <h2>Upcoming flights</h2>
+    <div class="airline-dashboard-section-heading"><h2>Upcoming flights</h2><a href="{{ route('airline.flights') }}">All flights</a></div>
     <table>
-        <caption>The next scheduled departures</caption>
+        <caption class="airline-table-caption">Upcoming flights</caption>
         <thead>
             <tr>
                 <th scope="col">Flight</th>
@@ -91,4 +88,5 @@
         </table>
     </article>
 </section>
+</div>
 @endsection

@@ -6,5 +6,5 @@
         @forelse($reviews as $review)<tr><td>{{ $review->customer->user->name }}</td><td>{{ $review->bookingFlight->flight->flight_number }}</td><td>{{ $review->rating }}/5</td><td>{{ $review->comment ?: '—' }}</td>
             <td colspan="2"><form class="d-flex gap-2" method="POST" action="{{ route('admin.reviews.update', $review) }}">@csrf @method('PATCH')<select class="form-select" name="status"><option value="visible" @selected($review->status === 'visible')>Visible</option><option value="hidden" @selected($review->status === 'hidden')>Hidden</option></select><button class="btn btn-primary">Save</button></form></td></tr>
         @empty<tr><td colspan="6">No reviews found.</td></tr>@endforelse
-    </tbody></table></div>{{ $reviews->links('pagination::bootstrap-5') }}
+    </tbody></table></div>{{ $reviews->links('super-admin.pagination') }}
 @endsection

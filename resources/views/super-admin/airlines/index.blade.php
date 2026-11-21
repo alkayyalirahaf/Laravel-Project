@@ -40,5 +40,5 @@
         @endforelse
         </tbody>
     </table></div>
-    {{ $airlines->links('pagination::bootstrap-5') }}
+    {{ $airlines->links('super-admin.pagination') }}
 @endsection

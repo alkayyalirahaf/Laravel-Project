@@ -1,25 +1,33 @@
 @props(['passengerIndex'])
 
-<section class="passport-scan" data-passport-scan data-passenger-index="{{ $passengerIndex }}" data-endpoint="{{ url('/book/passport-scan') }}">
-    <h3>Optional passport scan</h3>
-    <p>The image is sent to Google Gemini for processing and is not kept by this app. Review suggestions carefully; scanning will not submit the passenger form.</p>
-    <label class="field">
-        <span>Passport image (JPEG, PNG, or WebP; up to 5 MB)</span>
-        <input type="file" accept="image/jpeg,image/png,image/webp" data-passport-image>
-    </label>
-    <label>
-        <input type="checkbox" data-passport-consent>
-        I agree to send this passport image to Google Gemini for one-time extraction.
-    </label>
-    <button class="button secondary" type="button" data-passport-scan-button>Scan passport</button>
-    <p role="status" aria-live="polite" data-passport-status></p>
-    <div data-passport-results hidden>
-        <p><strong>Check every suggestion against the passport before using it.</strong> You can edit these values below before confirming.</p>
-        <ul data-passport-warnings></ul>
-        <div class="form-grid" data-passport-review></div>
-        <button class="button" type="button" data-passport-confirm disabled>Use reviewed values</button>
+<details class="passport-scan" data-passport-scan data-passenger-index="{{ $passengerIndex }}" data-endpoint="{{ url('/book/passport-scan') }}">
+    <summary aria-label="Upload your passport (optional)">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 7h4l2-3h6l2 3h4a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/>
+            <circle cx="12" cy="13" r="3.5"/>
+        </svg>
+        <span>Upload your passport</span>
+    </summary>
+    <div class="passport-scan-body">
+        <label class="field passport-scan-upload">
+            <span>Passport photo</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" data-passport-image>
+            <small>JPEG, PNG or WebP · Max 5 MB</small>
+        </label>
+        <label class="passport-scan-consent">
+            <input type="checkbox" data-passport-consent>
+            <span>Send this photo to Google for a one-time scan. <small>Yalla Teer does not keep it.</small></span>
+        </label>
+        <button class="button secondary" type="button" data-passport-scan-button>Scan passport</button>
+        <p role="status" aria-live="polite" data-passport-status></p>
+        <div data-passport-results hidden>
+            <p><strong>Check and correct the details against your passport.</strong></p>
+            <ul data-passport-warnings></ul>
+            <div class="form-grid" data-passport-review></div>
+            <button class="button" type="button" data-passport-confirm disabled>Use reviewed values</button>
+        </div>
     </div>
-</section>
+</details>
 
 <script>
     document.querySelectorAll('[data-passport-scan]:not([data-initialized])').forEach((component) => {
@@ -123,13 +131,6 @@
                     }
                     control.dataset.passportField = field;
                     wrapper.append(control);
-
-                    const score = Number(data.confidence?.[field]);
-                    if (Number.isFinite(score) && score > 0) {
-                        const confidence = document.createElement('small');
-                        confidence.textContent = `Reading confidence: ${Math.round(score * 100)}%`;
-                        wrapper.append(confidence);
-                    }
                     review.append(wrapper);
                 }
 
@@ -182,11 +183,18 @@
             confirmation.value = '1';
 
             component.dataset.confirmed = 'true';
+            results.hidden = true;
+            review.replaceChildren();
+            warnings.replaceChildren();
+            confirmButton.disabled = true;
+            consentInput.checked = false;
             status.textContent = 'Reviewed values copied to the passenger form. Check them again before continuing.';
             form?.dispatchEvent(new CustomEvent('passport-scan:confirmed', {
                 bubbles: true,
                 detail: { passengerIndex, fields: confirmedFields, filledByAi: true },
             }));
+            component.open = false;
+            component.querySelector('summary').focus({ preventScroll: true });
         });
     });
 </script>

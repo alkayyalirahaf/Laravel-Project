@@ -6,5 +6,5 @@
     <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Booking</th><th>Channel</th><th>Type</th><th>Scheduled</th><th>Sent</th><th>Status</th></tr></thead><tbody>
         @forelse($logs as $log)<tr><td>{{ $log->booking->code }}</td><td>{{ $log->channel }}</td><td>{{ $log->type }}</td><td>{{ $log->scheduled_at }}</td><td>{{ $log->sent_at ?: '—' }}</td><td>{{ $log->status }}</td></tr>
         @empty<tr><td colspan="6">No notification logs found.</td></tr>@endforelse
-    </tbody></table></div>{{ $logs->links('pagination::bootstrap-5') }}
+    </tbody></table></div>{{ $logs->links('super-admin.pagination') }}
 @endsection

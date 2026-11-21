@@ -12,6 +12,6 @@
     <div class="table-responsive"><table class="table"><thead><tr><th>Code</th><th>Status</th><th>Total</th><th>Date</th></tr></thead><tbody>
         @forelse($bookings as $booking)<tr><td>{{ $booking->code }}</td><td>{{ $booking->status }}</td><td>{{ $booking->total }}</td><td>{{ $booking->created_at }}</td></tr>
         @empty<tr><td colspan="4">No bookings.</td></tr>@endforelse
-    </tbody></table></div>{{ $bookings->links('pagination::bootstrap-5') }}
+    </tbody></table></div>{{ $bookings->links('super-admin.pagination') }}
     <a href="{{ route('admin.customers') }}">Back to customers</a>
 @endsection

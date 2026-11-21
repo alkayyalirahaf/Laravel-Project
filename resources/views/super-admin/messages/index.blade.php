@@ -6,5 +6,5 @@
         @forelse($messages as $message)<tr><td>{{ $message->name }}</td><td>{{ $message->email }}</td><td>{{ $message->type }}</td><td style="min-width:250px">{{ $message->message }}</td><td>{{ $message->customer?->user?->name ?? 'Guest' }}</td><td>{{ $message->created_at }}</td><td>
             @if($message->status === 'new')<form method="POST" action="{{ route('admin.messages.handled', $message) }}">@csrf @method('PATCH')<button class="btn btn-sm btn-primary">Mark handled</button></form>@else Handled @endif
         </td></tr>@empty<tr><td colspan="7">No messages found.</td></tr>@endforelse
-    </tbody></table></div>{{ $messages->links('pagination::bootstrap-5') }}
+    </tbody></table></div>{{ $messages->links('super-admin.pagination') }}
 @endsection

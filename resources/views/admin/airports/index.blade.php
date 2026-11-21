@@ -1,19 +1,21 @@
-@extends('layouts.app', ['area' => 'admin', 'navigation' => ['airports' => ['/airports', 'Airports']]])
+@extends('super-admin.management-layout')
 
-@section('title', $title)
+@section('admin-title', $title)
 
-@section('content')
-<div class="bar">
+@section('admin-content')
+<div class="admin-flights admin-airports">
+<header class="admin-flights-heading admin-airports-heading">
     <h1>{{ $title }}</h1>
+    <span>{{ number_format($airports->total()) }} {{ Str::plural('airport', $airports->total()) }}</span>
     <a class="button" href="{{ route('admin.airports.create') }}">Create airport</a>
-</div>
+</header>
 
-<form action="{{ route('admin.airports') }}" method="GET" class="panel form-grid section">
-    <label class="field">
+<form action="{{ route('admin.airports') }}" method="GET" class="admin-flight-filters">
+    <label>
         <span>Search name or IATA code</span>
-        <input name="search" value="{{ $filters['search'] }}">
+        <input type="search" name="search" value="{{ $filters['search'] }}" placeholder="e.g. Cairo or CAI">
     </label>
-    <label class="field">
+    <label>
         <span>City</span>
         <select name="city_id">
             <option value="">All cities</option>
@@ -22,26 +24,25 @@
             @endforeach
         </select>
     </label>
-    <div class="actions wide">
-        <button class="button" type="submit">Filter</button>
-        <a class="button secondary" href="{{ route('admin.airports') }}">Clear</a>
+    <div class="admin-flight-filter-actions">
+        <button class="button" type="submit">Apply filters</button>
+        <a href="{{ route('admin.airports') }}">Clear</a>
     </div>
 </form>
 
-<section class="panel table-wrap section">
+<div class="admin-flight-table" role="region" aria-label="Airport results" tabindex="0">
     <table>
-        <caption>Airports</caption>
         <thead>
-            <tr><th>Name</th><th>IATA code</th><th>City</th><th>Actions</th></tr>
+            <tr><th scope="col">Name</th><th scope="col">IATA code</th><th scope="col">City</th><th scope="col">Actions</th></tr>
         </thead>
         <tbody>
             @forelse($airports as $airport)
                 <tr>
-                    <td>{{ $airport->name }}</td>
-                    <td>{{ $airport->code }}</td>
+                    <th scope="row">{{ $airport->name }}</th>
+                    <td><span class="admin-flight-status">{{ $airport->code }}</span></td>
                     <td>{{ $airport->city->name }}</td>
                     <td>
-                        <div class="actions">
+                        <div class="admin-airport-actions">
                             <a href="{{ route('admin.airports.edit', $airport) }}">Edit</a>
                             <form action="{{ route('admin.airports.destroy', $airport) }}" method="POST">
                                 @csrf
@@ -52,11 +53,12 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="4">No airports found.</td></tr>
+                <tr><td colspan="4" class="admin-flight-empty">No airports found.</td></tr>
             @endforelse
         </tbody>
     </table>
-</section>
+</div>
 
-<div class="section">{{ $airports->links() }}</div>
+{{ $airports->links('super-admin.pagination') }}
+</div>
 @endsection
