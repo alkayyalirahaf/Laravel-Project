@@ -13,5 +13,7 @@
     <textarea class="form-control @error('local_apps') is-invalid @enderror" id="local_apps" name="local_apps" rows="3" maxlength="10000">{{ old('local_apps', $country->local_apps) }}</textarea>
     @error('local_apps')<div class="invalid-feedback">{{ $message }}</div>@enderror
 </div>
-<button class="btn btn-primary" type="submit">Save country</button>
-<a class="btn btn-secondary" href="{{ route('admin.countries') }}">Cancel</a>
+<div class="d-flex flex-wrap gap-2 mt-4">
+    <button class="btn btn-primary" type="submit">Save country</button>
+    <a class="btn btn-secondary" href="{{ route('admin.countries') }}">Cancel</a>
+</div>
