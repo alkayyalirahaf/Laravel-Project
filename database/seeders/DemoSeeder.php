@@ -53,6 +53,7 @@ class DemoSeeder extends Seeder
                 $customers[] = $this->user($key, $name)->customer()->firstOrCreate([], ['credit_balance' => 0]);
             }
             $flights = $this->flights($airports, $airlines);
+            $this->dubaiComparisonFlights($airports, $airlines);
             $this->bookings($customers, $flights);
             foreach ($customers as $index => $customer) {
                 foreach (['find', 'compare', 'tips'] as $mode) {
@@ -143,6 +144,38 @@ class DemoSeeder extends Seeder
         }
 
         return $flights;
+    }
+
+    private function dubaiComparisonFlights(array $airports, array $airlines): void
+    {
+        $inventory = app(FlightInventoryService::class);
+        $offers = [
+            [1, 'AMM', 'DXB', 'TK', 'TKQA101', 9, 82],
+            [1, 'AMM', 'DXB', 'EK', 'EKQA102', 19, 155],
+            [10, 'DXB', 'AMM', 'RJ', 'RJQA201', 8, 112],
+            [10, 'DXB', 'AMM', 'EK', 'EKQA202', 13, 98],
+            [10, 'DXB', 'AMM', 'TK', 'TKQA203', 18, 85],
+            [10, 'DXB', 'AMM', 'RJ', 'RJQA204', 21, 145],
+        ];
+
+        foreach ($offers as [$day, $origin, $destination, $carrier, $number, $hour, $fare]) {
+            $departure = today()->addDays($day)->setTime($hour, 0);
+            if (Flight::where('flight_number', $number)->where('departure_at', $departure)->exists()) {
+                continue;
+            }
+
+            $inventory->createFlight($airlines[$carrier]->id, [
+                'flight_number' => $number,
+                'origin_airport_id' => $airports[$origin]->id,
+                'destination_airport_id' => $airports[$destination]->id,
+                'departure_at' => $departure->toDateTimeString(),
+                'arrival_at' => $departure->copy()->addHours(3)->toDateTimeString(),
+                'stops' => 0,
+                'status' => 'scheduled',
+            ], [
+                ['class' => 'economy', 'price' => $fare, 'seat_rows' => 10, 'seats_per_row' => 6, 'cabin_baggage_kg' => 7, 'checked_baggage_kg' => 23],
+            ]);
+        }
     }
 
     private function bookings(array $customers, array $flights): void

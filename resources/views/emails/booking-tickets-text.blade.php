@@ -11,6 +11,7 @@ Passenger: {{ $passenger->first_name }} {{ $passenger->last_name }}
 Departure: {{ $flight->departure_at->format('d M Y, H:i T') }}
 Cabin: {{ ucfirst($leg->flightClass->class) }} · Seat: {{ $ticket->seat?->seat_number ?? 'Unassigned' }}
 Ticket number: {{ $ticket->ticket_number }}
+View ticket: {{ route('my.ticket', $ticket->ticket_number) }}
 @endforeach
 
 @endforeach

@@ -25,6 +25,8 @@ use App\Http\Controllers\SuperAdmin\CityController;
 use App\Http\Controllers\SuperAdmin\CountryController;
 use App\Http\Controllers\SuperAdmin\CreditController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
+use App\Http\Controllers\SuperAdmin\FlightController as AdminFlightController;
+use App\Http\Controllers\SuperAdmin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Middleware\SetLandingLocale;
 use Illuminate\Http\Request;
@@ -48,8 +50,6 @@ use App\Http\Controllers\AirlineAdmin\DashboardController as AirlineDashboardCon
 use App\Http\Controllers\AirlineAdmin\FlightController as AirlineFlightController;
 use App\Http\Controllers\AirlineAdmin\BookingController as AirlineBookingController;
 use App\Http\Controllers\AirlineAdmin\ReviewController as AirlineReviewController;
-use App\Http\Controllers\SuperAdmin\FlightController as AdminFlightController;
-use App\Http\Controllers\SuperAdmin\PaymentController as AdminPaymentController;
 
 
 
@@ -305,4 +305,3 @@ Route::prefix('airline')->name('airline.')->middleware('role.airline-admin')->gr
     // C6: Reviews
     Route::get('/reviews', [AirlineReviewController::class, 'index'])->name('reviews');
 });
-
