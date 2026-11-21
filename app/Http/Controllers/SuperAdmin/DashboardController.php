@@ -15,16 +15,18 @@ class DashboardController
     {
         abort_unless($request->user()?->superAdmin, 403);
 
-        $statistics = [
-            'Customers' => Customer::count(),
-            'Airlines' => Airline::count(),
-            'Flights' => Flight::count(),
-            'Bookings' => Booking::count(),
-            'Payments' => Payment::count(),
-            'Successful payments' => Payment::where('status', 'succeeded')->count(),
+        $queries = [
+            'Customers' => Customer::query(),
+            'Airlines' => Airline::query(),
+            'Flights' => Flight::query(),
+            'Bookings' => Booking::query(),
+            'Payments' => Payment::query(),
+            'Successful payments' => Payment::where('status', 'succeeded'),
         ];
         $recentBookings = Booking::with('customer.user')->latest('id')->limit(10)->get();
         $recentPayments = Payment::with('booking')->latest('id')->limit(10)->get();
+
+        $statistics = array_map(fn ($query) => $query->count(), $queries);
 
         return view('super-admin.panel', array_merge(compact('statistics', 'recentBookings', 'recentPayments'), ['area' => 'admin', 'screen' => 'dashboard', 'title' => 'Super Admin Dashboard']));
     }

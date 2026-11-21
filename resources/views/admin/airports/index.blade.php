@@ -31,13 +31,13 @@
 <div class="table-responsive">
     <table class="table table-striped align-middle">
         <thead>
-            <tr><th>Name</th><th>IATA code</th><th>City</th><th>Actions</th></tr>
+            <tr><th scope="col">Name</th><th scope="col">IATA code</th><th scope="col">City</th><th scope="col">Actions</th></tr>
         </thead>
         <tbody>
             @forelse($airports as $airport)
                 <tr>
-                    <td>{{ $airport->name }}</td>
-                    <td>{{ $airport->code }}</td>
+                    <th scope="row">{{ $airport->name }}</th>
+                    <td><span class="admin-flight-status">{{ $airport->code }}</span></td>
                     <td>{{ $airport->city->name }}</td>
                     <td>
                         <div class="d-flex gap-2">
@@ -51,7 +51,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="4">No airports found.</td></tr>
+                <tr><td colspan="4" class="admin-flight-empty">No airports found.</td></tr>
             @endforelse
         </tbody>
     </table>
