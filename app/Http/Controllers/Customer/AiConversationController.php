@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Customer;
 
-use Illuminate\Http\Request;
 use App\Models\AiConversation;
 use App\Models\Airport;
 use App\Models\City;
 use App\Models\Recommendation;
 use App\Services\AiService;
 use App\Services\FlightSearchService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -38,7 +38,7 @@ class AiConversationController
             'message' => ['required', 'string', 'max:2000'],
         ]);
 
-        if (!$ai->available()) {
+        if (! $ai->available()) {
             return back()->withInput()->withErrors(['assistant' => 'AI integration is unavailable because a provider has not been configured.']);
         }
 
@@ -64,12 +64,6 @@ class AiConversationController
             }
         }
 
-        try {
-            $tips = $ai->reply($data['mode'], $data['message']);
-        } catch (\RuntimeException $exception) {
-            return back()->withInput()->withErrors(['assistant' => $exception->getMessage()]);
-        }
-
         $snapshot = $flights->map(fn ($flight) => [
             'id' => $flight->id, 'number' => $flight->flight_number, 'airline' => $flight->airline->name,
             'from' => $flight->originAirport->code, 'to' => $flight->destinationAirport->code,
@@ -82,6 +76,12 @@ class AiConversationController
             ])->values()->all(),
         ])->values()->all();
 
+        try {
+            $tips = $ai->reply($data['mode'], $data['message'], $snapshot);
+        } catch (\RuntimeException $exception) {
+            return back()->withInput()->withErrors(['assistant' => $exception->getMessage()]);
+        }
+
         $transcript = [
             'message' => $data['message'], 'tips' => $tips, 'flights' => $snapshot,
             'recorded_at' => now()->toIso8601String(), 'timezone' => config('app.timezone'),
@@ -89,7 +89,7 @@ class AiConversationController
         $path = 'dev3-ai/'.$customer->id.'/'.Str::uuid().'.json';
 
         try {
-            if (!Storage::disk('local')->put($path, json_encode($transcript, JSON_THROW_ON_ERROR))) {
+            if (! Storage::disk('local')->put($path, json_encode($transcript, JSON_THROW_ON_ERROR))) {
                 throw new \RuntimeException('Conversation storage failed.');
             }
 

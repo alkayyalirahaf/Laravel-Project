@@ -41,12 +41,12 @@
             </label>
             <label class="field">
                 <span>Departure</span>
-                <input type="datetime-local" name="departure_at" value="{{ old('departure_at') }}" required>
+                <input type="datetime-local" name="departure_at" min="{{ now()->format('Y-m-d\TH:i') }}" value="{{ old('departure_at') }}" required>
                 @error('departure_at')<small class="error">{{ $message }}</small>@enderror
             </label>
             <label class="field">
                 <span>Arrival</span>
-                <input type="datetime-local" name="arrival_at" value="{{ old('arrival_at') }}" required>
+                <input type="datetime-local" name="arrival_at" min="{{ now()->format('Y-m-d\TH:i') }}" value="{{ old('arrival_at') }}" required>
                 @error('arrival_at')<small class="error">{{ $message }}</small>@enderror
             </label>
             <label class="field">

@@ -1,4 +1,12 @@
 @props(['name', 'label', 'type' => 'text', 'value' => null, 'options' => null, 'required' => false])
+@php
+    $today = now('Asia/Amman')->toDateString();
+    if (in_array($type, ['date', 'datetime-local']) && !str_contains($name, 'date_of_birth')) {
+        $attributes = $attributes->merge(['min' => $type === 'date' ? $today : now('Asia/Amman')->format('Y-m-d\TH:i')]);
+    } elseif ($type === 'date' && str_contains($name, 'date_of_birth')) {
+        $attributes = $attributes->merge(['max' => $today]);
+    }
+@endphp
 <label class="field">
     <span>{{ $label }}</span>
     @if($options !== null)

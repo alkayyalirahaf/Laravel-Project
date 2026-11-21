@@ -1,4 +1,5 @@
 import './bootstrap';
+import './date-constraints';
 
 const menu = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#primary-nav');
