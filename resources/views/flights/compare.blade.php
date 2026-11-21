@@ -3,7 +3,7 @@
 @section('title', 'Compare flights')
 
 @section('content')
-<h1>Compare flights</h1>
+<h1 class="flight-page-title">Compare flights</h1>
 <div class="actions"><a class="button secondary" href="{{ route('flights.search', session('dev3.search_filters', [])) }}">Back to search results</a></div>
 @if($flights->count() < 2)
     <p class="panel section">Choose two or three flights from the search results to compare.</p>

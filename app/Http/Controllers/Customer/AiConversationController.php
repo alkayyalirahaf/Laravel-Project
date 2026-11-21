@@ -20,13 +20,18 @@ class AiConversationController
     {
         $customer = $request->user()?->customer;
         abort_unless($customer, 403);
+        return view('pages.assistant', $this->chatData($customer, $ai));
+    }
+
+    private function chatData(\App\Models\Customer $customer, AiService $ai): array
+    {
         $conversations = $customer->aiConversations()->latest('id')->paginate(15);
         $available = $ai->available();
         $airports = Airport::with('city')->orderBy('code')->get();
         $cities = City::orderBy('name')->get();
         $filters = [];
 
-        return view('pages.assistant', compact('conversations', 'available', 'airports', 'cities', 'filters'));
+        return compact('conversations', 'available', 'airports', 'cities', 'filters');
     }
 
     public function store(Request $request, AiService $ai, FlightSearchService $search)
@@ -117,7 +122,7 @@ class AiConversationController
         return redirect()->route('my.assistant.show', $conversation->id);
     }
 
-    public function show(Request $request, int $conversation)
+    public function show(Request $request, int $conversation, ?AiService $ai = null)
     {
         $customer = $request->user()?->customer;
         abort_unless($customer, 403);
@@ -130,6 +135,8 @@ class AiConversationController
         $transcript = json_decode($contents, true);
         abort_unless(is_array($transcript) && isset($transcript['message'], $transcript['tips'], $transcript['flights']), 404);
 
-        return view('customer.assistant.show', compact('conversation', 'transcript'));
+        return view('pages.assistant', $this->chatData($customer, $ai ?? app(AiService::class)) + [
+            'activeConversation' => $conversation, 'transcript' => $transcript,
+        ]);
     }
 }

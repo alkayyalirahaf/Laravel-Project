@@ -39,11 +39,6 @@
         <main class="admin-main">
             <header class="admin-topbar"><span>Yalla Teer <span class="admin-topbar-separator">/</span> {{ trim($__env->yieldContent('admin-title', 'Super Admin')) }}</span><a href="{{ route('home') }}">View website ↗</a></header>
             <section class="admin-content">
-                @if (session('success')) <div class="alert alert-success" role="status">{{ session('success') }}</div> @endif
-                @if (session('error')) <div class="alert alert-danger" role="alert">{{ session('error') }}</div> @endif
-                @if ($errors->any())
-                    <div class="alert alert-danger" role="alert"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
-                @endif
                 @yield('admin-content')
             </section>
         </main>

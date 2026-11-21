@@ -3,7 +3,10 @@
 @section('title', 'Passengers')
 
 @section('content')
-<h1>Passengers</h1>
+<header class="passenger-heading">
+    <a class="selection-back" href="{{ route('flights.search', session('dev3.search_selection.filters', [])) }}">← Back to flight results</a>
+    <h1 class="flight-page-title">Passengers</h1>
+</header>
 <div class="passenger-layout">
     <section class="panel passenger-panel">
         <h2>Travelers</h2>
@@ -12,7 +15,7 @@
             <input type="hidden" name="selection_id" value="{{ $selectionId }}">
             @error('selection')<p class="notice error">{{ $message }}</p>@enderror
             @foreach($travelerTypes as $index => $type)
-                <fieldset class="form-grid">
+                <fieldset class="form-grid passenger-fields">
                     <legend>Passenger {{ $loop->iteration }} · {{ ucfirst($type) }}</legend>
                     <div>
                         <x-travel-field :name="'passengers['.$index.'][first_name]'" label="First / given name" :value="old('passengers.'.$index.'.first_name', $draft['passengers'][$index]['first_name'] ?? null)" maxlength="100" required />
@@ -46,21 +49,22 @@
                         <x-travel-field :name="'passengers['.$index.'][passport_expiry]'" label="Passport expiry" :value="old('passengers.'.$index.'.passport_expiry', $draft['passengers'][$index]['passport_expiry'] ?? null)" :min="collect($cabins)->max(fn ($cabin) => $cabin->flight->departure_at->toDateString())" type="date" required />
                         @error('passengers.'.$index.'.passport_expiry')<small class="error">{{ $message }}</small>@enderror
                     </div>
-                    <div>
+                    <div class="passenger-assistance">
                         <x-travel-field :name="'passengers['.$index.'][special_assistance]'" label="Special assistance (optional)" :value="old('passengers.'.$index.'.special_assistance', $draft['passengers'][$index]['special_assistance'] ?? null)" maxlength="255" />
                         @error('passengers.'.$index.'.special_assistance')<small class="error">{{ $message }}</small>@enderror
                     </div>
                 </fieldset>
             @endforeach
             @error('passengers')<p class="notice error">{{ $message }}</p>@enderror
-            <fieldset class="form-grid">
+            <fieldset class="form-grid passenger-fields passenger-contact">
                 <legend>Booking contact</legend>
                 <x-travel-field name="contact_email" label="Email address" type="email" :value="$draft['contact_email'] ?? request()->user()->email" maxlength="255" required />
                 <x-travel-field name="contact_phone" label="Phone number (optional)" type="tel" :value="$draft['contact_phone'] ?? null" maxlength="30" />
             </fieldset>
-            <button class="button" type="submit">Continue to seats</button>
+            <div class="passenger-actions">
+                <button class="button" type="submit">Continue to seats <span aria-hidden="true">→</span></button>
+            </div>
         </form>
-        <a href="{{ route('flights.search') }}">Search again</a>
     </section>
     <aside class="panel passenger-panel passenger-summary">
         <h2>Trip summary</h2>

@@ -61,9 +61,6 @@
             @if(\Illuminate\Support\Facades\Route::has('contact.store'))
             <form action="{{ route('contact.store') }}" method="POST" class="panel stack">
                 @csrf
-                @if(session('status'))
-                    <p class="notice" role="status">{{ session('status') }}</p>
-                @endif
                 <label class="field">
                     <span>Name</span>
                     <input name="name" value="{{ old('name') }}" maxlength="150" required>

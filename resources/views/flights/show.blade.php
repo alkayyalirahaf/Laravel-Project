@@ -11,7 +11,7 @@
         default => null,
     };
 @endphp
-<h1>{{ $flight->flight_number }}</h1>
+<h1 class="flight-page-title">{{ $flight->flight_number }}</h1>
 <div class="panel">
     <span class="badge">{{ $flight->airline->name }} · {{ ucfirst($flight->status) }}</span>
     <h2 class="section">{{ $flight->originAirport->name }} ({{ $flight->originAirport->code }}) → {{ $flight->destinationAirport->name }} ({{ $flight->destinationAirport->code }})</h2>
