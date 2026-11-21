@@ -3,40 +3,81 @@
 @section('title', 'Travel assistant')
 
 @section('content')
-<h1>Travel assistant</h1>
-<div class="actions"><a class="button secondary" href="{{ route('flights.search') }}">Find flights</a><a class="button secondary" href="{{ route('compare') }}">Compare</a><a class="button secondary" href="{{ route('destinations') }}">Local tips</a></div>
+<div class="assistant-chat">
+    <details class="panel assistant-history">
+        <summary>Conversation history</summary>
+        <a class="button secondary" href="{{ route('my.assistant') }}">+ New conversation</a>
+        <ul>
+            @forelse($conversations as $entry)
+                <li><a href="{{ route('my.assistant.show', $entry->id) }}" @if(($activeConversation->id ?? null) === $entry->id) aria-current="page" @endif>
+                    <span dir="auto">{{ $entry->title }}</span>
+                    <small>{{ $entry->created_at?->format('d M, H:i') }}</small>
+                </a></li>
+            @empty
+                <li>No saved conversations.</li>
+            @endforelse
+        </ul>
+        {{ $conversations->links() }}
+    </details>
+    <section class="panel assistant-room" aria-labelledby="assistant-title">
+        <header class="assistant-room-header">
+            @if(is_file(public_path('assets/landing/assistant-jet.png')))
+                <img src="{{ asset('assets/landing/assistant-jet.png') }}" width="72" height="56" alt="">
+            @endif
+            <h1 id="assistant-title">Travel assistant</h1>
+        </header>
+        <div class="assistant-messages">
+            @isset($transcript)
+                <div class="assistant-message assistant-message-user">
+                    <strong>You</strong>
+                    <div dir="auto">{{ $transcript['message'] }}</div>
+                </div>
+                <div class="assistant-message">
+                    <strong>Yalla Teer</strong>
+                    @foreach((array) $transcript['tips'] as $tip)
+                        <div dir="auto">{{ $tip }}</div>
+                    @endforeach
+                </div>
+                @include('customer.assistant.show')
+            @else
+                <div class="assistant-message">
+                    <strong>Yalla Teer</strong>
+                    <div>Hi! Ask me for travel tips, help finding flights, or a comparison.</div>
+                </div>
+            @endisset
+        </div>
     @unless($available)
         <p class="notice">AI integration is currently unavailable. You can still <a href="{{ route('flights.search') }}">search flights</a> and <a href="{{ route('compare') }}">compare flights</a>.</p>
     @endunless
-    <p>Find and compare use your selected filters and real database flights. The assistant suggests general travel tips. It cannot create a booking or execute a payment.</p>
-    <form method="POST" action="{{ route('my.assistant.store') }}" class="panel stack section">
+    <form method="POST" action="{{ route('my.assistant.store') }}" class="assistant-composer" data-assistant-composer>
         @csrf
         <fieldset @disabled(!$available)>
-            <label class="form-label" for="mode">Mode</label>
-            <select class="input-control mb-3" name="mode" id="mode">
-                @foreach(['tips' => 'Travel tips', 'find' => 'Find flights using the filters below', 'compare' => 'Compare selected flight IDs below'] as $value => $label)
-                    <option value="{{ $value }}" @selected(old('mode') === $value)>{{ $label }}</option>
+            <div class="assistant-modes" role="group" aria-label="Assistant mode">
+                @foreach(['tips' => 'Travel tips', 'find' => 'Find flights', 'compare' => 'Compare flights'] as $value => $label)
+                    <label><input type="radio" name="mode" value="{{ $value }}" @checked(old('mode', 'tips') === $value) required> <span>{{ $label }}</span></label>
                 @endforeach
-            </select>
-            <label class="form-label" for="message">Travel question (do not include passport or payment information)</label>
-            <textarea class="input-control mb-3" id="message" name="message" maxlength="2000" rows="3" required>{{ old('message') }}</textarea>
-            <details class="section"><summary>Find: flight filters</summary>
+            </div>
+            <details class="assistant-options" data-assistant-options="find"><summary>Flight search filters</summary>
                 @include('flights.filters', ['optionalFilters' => true])
             </details>
-            <details class="section"><summary>Compare: flight IDs from search results</summary>
+            <details class="assistant-options" data-assistant-options="compare"><summary>Flight IDs for comparison</summary>
                 @foreach([0, 1, 2] as $index)
                     <label class="form-label" for="flight-{{ $index }}">Flight {{ $index + 1 }} @if($index === 2)(optional)@endif</label>
                     <input class="input-control mb-2" type="number" min="1" id="flight-{{ $index }}" name="flights[]" value="{{ old('flights.'.$index) }}">
                 @endforeach
             </details>
-            <button class="button">Ask and save conversation</button>
+            <div class="assistant-input">
+                <label class="sr-only" for="message">Travel question</label>
+                <textarea class="input-control" id="message" name="message" placeholder="Ask about your trip…" aria-describedby="assistant-privacy" maxlength="2000" rows="2" required>{{ old('message') }}</textarea>
+                <button class="button" type="submit" aria-label="Send message" title="Send message">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M3.3 3.2a.8.8 0 0 0-1.1 1l3.5 7.8-3.5 7.8a.8.8 0 0 0 1.1 1l18.3-8.1a.8.8 0 0 0 0-1.4L3.3 3.2Z"/>
+                    </svg>
+                </button>
+            </div>
+            <small id="assistant-privacy">Keep passport and payment details out of your message.</small>
         </fieldset>
     </form>
-    <h2>Conversation history</h2>
-    <ul class="stack section">
-        @forelse($conversations as $conversation)
-            <li class="panel"><a href="{{ route('my.assistant.show', $conversation->id) }}">{{ $conversation->title }}</a> — {{ $conversation->type }} — {{ $conversation->created_at?->format('Y-m-d H:i') }}</li>
-        @empty<li class="panel">No saved conversations.</li>@endforelse
-    </ul>
-    {{ $conversations->links() }}
+    </section>
+</div>
 @endsection

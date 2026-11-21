@@ -1,4 +1,22 @@
 import './bootstrap';
+
+document.querySelectorAll('[data-dismiss-toast]').forEach((button) => {
+    button.addEventListener('click', () => button.closest('.site-toast').remove());
+});
+
+document.querySelectorAll('[data-assistant-composer]').forEach((form) => {
+    const options = form.querySelectorAll('[data-assistant-options]');
+    const update = () => {
+        for (const section of options) {
+            const active = section.dataset.assistantOptions === form.elements.mode.value;
+            section.hidden = !active;
+            section.open = active;
+        }
+    };
+
+    form.querySelectorAll('[name="mode"]').forEach((input) => input.addEventListener('change', update));
+    update();
+});
 import './date-constraints';
 
 document.querySelectorAll('[data-airline-image]').forEach((image) => {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Airport;
 use App\Models\City;
+use App\Models\Flight;
 use App\Services\FlightSearchService;
 use App\Services\SearchSelectionService;
 
@@ -43,6 +44,11 @@ class PublicFlightController
         $selection = $selection->select($request->all(), $search);
         $request->session()->put('dev3.search_selection', $selection);
 
-        return view('flights.selection', compact('selection'));
+        $loadSelectedFlights = fn () => Flight::with('airline')->whereKey(array_filter([
+            $selection['outbound']['flight_id'],
+            $selection['return']['flight_id'] ?? null,
+        ]))->get()->keyBy('id');
+
+        return view('flights.selection', compact('selection', 'loadSelectedFlights'));
     }
 }

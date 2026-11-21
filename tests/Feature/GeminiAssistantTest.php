@@ -34,7 +34,7 @@ class GeminiAssistantTest extends TestCase
         $user->customer()->create(['credit_balance' => 0]);
         Http::fake(['generativelanguage.googleapis.com/*' => Http::response($this->response(['يمكنك زيارة دبي في الشتاء.']))]);
 
-        $this->actingAs($user)->get('/assistant')->assertOk()->assertSee('Ask and save conversation');
+        $this->actingAs($user)->get('/assistant')->assertOk()->assertSee('Send message');
         $this->post('/my/assistant', ['mode' => 'tips', 'message' => 'متى أزور دبي؟'])->assertRedirect();
         $conversation = AiConversation::firstOrFail();
         $this->get(route('my.assistant.show', $conversation))->assertOk()->assertSee('يمكنك زيارة دبي في الشتاء.');

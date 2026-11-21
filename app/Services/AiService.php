@@ -106,6 +106,7 @@ class AiService
                 401, 403 => 'Gemini authentication failed. Check the API key and project access.',
                 404 => 'The configured Gemini model is unavailable. Check GEMINI_MODEL.',
                 429 => 'Gemini usage limit reached. Please try again later.',
+                500, 502, 503, 504 => 'Gemini is temporarily unavailable. Your message was kept. Please try sending it again in a moment.',
                 default => 'The AI provider is temporarily unavailable.',
             });
         }

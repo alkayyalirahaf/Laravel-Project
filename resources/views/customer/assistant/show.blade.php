@@ -1,13 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Saved conversation')
-
-@section('content')
-<h1>{{ $conversation->title }}</h1>
-    <p class="panel">{{ $transcript['message'] }}</p>
-    <h2>Travel tips</h2>
-    <ul>@foreach($transcript['tips'] as $tip)<li>{{ $tip }}</li>@endforeach</ul>
-    @if($conversation->type !== 'tips' && empty($transcript['flights']))
+    @if($activeConversation->type !== 'tips' && empty($transcript['flights']))
         <p class="notice">No database flights matched your filters.</p>
     @endif
     @if(!empty($transcript['flights']))
@@ -25,5 +16,3 @@
             </tbody>
         </table></div>
     @endif
-    <a class="button" href="{{ route('my.assistant') }}">Back to assistant</a>
-@endsection

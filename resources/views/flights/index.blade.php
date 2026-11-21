@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="flight-search-page">
-    <h1 class="flight-search-title">Find flights</h1>
+    <h1 class="flight-page-title">Find flights</h1>
     <div class="panel flight-search-panel">
         <x-landing-search />
     </div>
