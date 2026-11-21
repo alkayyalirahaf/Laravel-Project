@@ -31,13 +31,21 @@
             <a class="admin-brand" href="{{ route('admin.dashboard') }}"><img src="{{ asset('assets/YallaTeer-Logo-02.png') }}" alt="Yalla Teer"><span>SUPER ADMIN</span></a>
             <nav aria-label="Super Admin navigation">
                 @foreach($adminNavigation as [$label, $routeName, $icon])
-                    <a class="admin-nav-link {{ request()->routeIs($routeName . '*') ? 'active' : '' }}" href="{{ route($routeName) }}"><span class="admin-nav-icon" aria-hidden="true">{{ $icon }}</span>{{ $label }}</a>
+                    <a class="admin-nav-link {{ (request()->routeIs($routeName . '*') || ($routeName === 'admin.bookings' && request()->routeIs('admin.booking'))) ? 'active' : '' }}" href="{{ route($routeName) }}"><span class="admin-nav-icon" aria-hidden="true">{{ $icon }}</span>{{ $label }}</a>
                 @endforeach
             </nav>
-            <a class="admin-back-link" href="{{ route('home') }}">← Back to website</a>
         </aside>
         <main class="admin-main">
-            <header class="admin-topbar"><span>Yalla Teer <span class="admin-topbar-separator">/</span> {{ trim($__env->yieldContent('admin-title', 'Super Admin')) }}</span><a href="{{ route('home') }}">View website ↗</a></header>
+            <header class="admin-topbar">
+                <span class="admin-topbar-location">Yalla Teer <span class="admin-topbar-separator" aria-hidden="true">/</span> <strong>{{ trim($__env->yieldContent('admin-title', 'Super Admin')) }}</strong></span>
+                <nav class="admin-topbar-actions" aria-label="Admin account actions">
+                    <a href="{{ route('home') }}">View website <span aria-hidden="true">&#8599;</span></a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit">Sign out</button>
+                    </form>
+                </nav>
+            </header>
             <section class="admin-content">
                 @yield('admin-content')
             </section>

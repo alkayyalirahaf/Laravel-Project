@@ -21,7 +21,7 @@
         @empty<tr><td colspan="3">No customers found.</td></tr>@endforelse
         </tbody>
     </table></div>
-    {{ $customers->links() }}
+    {{ $customers->links('super-admin.pagination') }}
     <h2>Transaction history</h2>
     <div class="table-wrap panel section"><table class="table table-striped">
         <thead><tr><th>Customer</th><th>Type</th><th>Amount</th><th>Balance after</th><th>Booking</th><th>Note</th><th>Date</th></tr></thead><tbody>
@@ -30,4 +30,4 @@
         @empty<tr><td colspan="7">No transactions found.</td></tr>@endforelse
         </tbody>
     </table></div>
-    {{ $transactions->links() }}
+    {{ $transactions->links('super-admin.pagination') }}

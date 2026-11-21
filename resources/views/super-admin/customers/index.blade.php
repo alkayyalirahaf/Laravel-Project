@@ -6,5 +6,5 @@
     <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Bookings</th><th>Status</th><th></th></tr></thead>
         <tbody>@forelse($customers as $customer)<tr><td>{{ $customer->user->name }}</td><td>{{ $customer->user->email }}</td><td>{{ $customer->phone ?: '—' }}</td><td>{{ $customer->bookings_count }}</td><td>{{ $customer->is_banned ? 'Banned' : 'Active' }}</td><td><a class="btn btn-sm btn-outline-primary" href="{{ route('admin.customers.show', $customer) }}">Details</a></td></tr>
         @empty<tr><td colspan="6">No customers found.</td></tr>@endforelse</tbody></table></div>
-    {{ $customers->links('pagination::bootstrap-5') }}
+    {{ $customers->links('super-admin.pagination') }}
 @endsection

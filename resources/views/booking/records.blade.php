@@ -1,6 +1,6 @@
-@extends('layouts.app', ['area' => ($admin ?? false) ? 'admin' : 'my'])
-@section('title', ($admin ?? false) ? 'Bookings' : 'My bookings')
-@section('content')
+@extends(($admin ?? false) ? 'super-admin.management-layout' : 'layouts.app', ['area' => ($admin ?? false) ? 'admin' : 'my'])
+@section(($admin ?? false) ? 'admin-title' : 'title', ($admin ?? false) ? 'Bookings' : 'My bookings')
+@section(($admin ?? false) ? 'admin-content' : 'content')
 <h1>{{ ($admin ?? false) ? 'Bookings' : 'My bookings' }}</h1>
 <div class="panel table-wrap">
     <table>

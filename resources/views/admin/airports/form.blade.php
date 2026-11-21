@@ -1,8 +1,8 @@
-@extends('layouts.app', ['area' => 'admin', 'navigation' => ['airports' => ['/airports', 'Airports']]])
+@extends('super-admin.management-layout')
 
-@section('title', $title)
+@section('admin-title', $title)
 
-@section('content')
+@section('admin-content')
 <h1>{{ $title }}</h1>
 
 <form action="{{ $formMode === 'create' ? route('admin.airports.store') : route('admin.airports.update', $airport) }}" method="POST" class="panel narrow stack">

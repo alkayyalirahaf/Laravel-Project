@@ -35,6 +35,6 @@
             </tbody>
         </table>
     </div>
-    {{ $cities->links() }}
+    {{ $cities->links('super-admin.pagination') }}
 </div>
 @endsection

@@ -3,64 +3,74 @@
 @section('admin-title', 'Flights')
 
 @section('admin-content')
-    <h1>Flights</h1>
+    <div class="admin-flights">
+        <header class="admin-flights-heading">
+            <h1>Flights</h1>
+            <span>{{ number_format($flights->total()) }} {{ Str::plural('flight', $flights->total()) }}</span>
+        </header>
 
-    <form method="GET" action="{{ route('admin.flights') }}" class="row g-2 mb-3">
-        <div class="col-md-4">
-            <input class="form-control" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search flight number">
-        </div>
-        <div class="col-md-3">
-            <select class="form-select" name="status">
-                <option value="">All statuses</option>
-                @foreach(['scheduled', 'delayed', 'cancelled', 'completed'] as $status)
-                    <option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ ucfirst($status) }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select class="form-select" name="airline_id">
-                <option value="">All airlines</option>
-                @foreach($airlines as $airline)
-                    <option value="{{ $airline->id }}" @selected((string) ($filters['airline_id'] ?? '') === (string) $airline->id)>
-                        {{ $airline->name }} ({{ $airline->code }})
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-auto"><button class="btn btn-outline-primary" type="submit">Filter</button></div>
-        <div class="col-auto"><a class="btn btn-outline-secondary" href="{{ route('admin.flights') }}">Clear</a></div>
-    </form>
+        <form method="GET" action="{{ route('admin.flights') }}" class="admin-flight-filters">
+            <label>
+                <span>Flight number</span>
+                <input type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="e.g. TK102">
+            </label>
+            <label>
+                <span>Status</span>
+                <select name="status">
+                    <option value="">All statuses</option>
+                    @foreach(['scheduled', 'delayed', 'cancelled', 'completed'] as $status)
+                        <option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ ucfirst($status) }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label>
+                <span>Airline</span>
+                <select name="airline_id">
+                    <option value="">All airlines</option>
+                    @foreach($airlines as $airline)
+                        <option value="{{ $airline->id }}" @selected((string) ($filters['airline_id'] ?? '') === (string) $airline->id)>
+                            {{ $airline->name }} ({{ $airline->code }})
+                        </option>
+                    @endforeach
+                </select>
+            </label>
+            <div class="admin-flight-filter-actions">
+                <button class="button" type="submit">Apply filters</button>
+                <a href="{{ route('admin.flights') }}">Clear</a>
+            </div>
+        </form>
 
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th scope="col">Flight number</th>
-                    <th scope="col">Airline</th>
-                    <th scope="col">Route</th>
-                    <th scope="col">Departure</th>
-                    <th scope="col">Arrival</th>
-                    <th scope="col">Stops</th>
-                    <th scope="col">Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($flights as $flight)
+        <div class="admin-flight-table" role="region" aria-label="Flight results" tabindex="0">
+            <table>
+                <thead>
                     <tr>
-                        <th scope="row">{{ $flight->flight_number }}</th>
-                        <td>{{ $flight->airline->name }} ({{ $flight->airline->code }})</td>
-                        <td>{{ $flight->originAirport->code }} → {{ $flight->destinationAirport->code }}</td>
-                        <td>{{ $flight->departure_at->format('Y-m-d H:i') }}</td>
-                        <td>{{ $flight->arrival_at->format('Y-m-d H:i') }}</td>
-                        <td>{{ $flight->stops }}</td>
-                        <td><span class="badge text-bg-secondary">{{ ucfirst($flight->status) }}</span></td>
+                        <th scope="col">Flight number</th>
+                        <th scope="col">Airline</th>
+                        <th scope="col">Route</th>
+                        <th scope="col">Departure</th>
+                        <th scope="col">Arrival</th>
+                        <th scope="col">Stops</th>
+                        <th scope="col">Status</th>
                     </tr>
-                @empty
-                    <tr><td colspan="7" class="text-center">No flights found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @forelse($flights as $flight)
+                        <tr>
+                            <th scope="row">{{ $flight->flight_number }}</th>
+                            <td>{{ $flight->airline->name }} <small>{{ $flight->airline->code }}</small></td>
+                            <td class="admin-flight-route">{{ $flight->originAirport->code }} <span>&rarr;</span> {{ $flight->destinationAirport->code }}</td>
+                            <td><strong>{{ $flight->departure_at->format('H:i') }}</strong><small>{{ $flight->departure_at->format('d M Y') }}</small></td>
+                            <td><strong>{{ $flight->arrival_at->format('H:i') }}</strong><small>{{ $flight->arrival_at->format('d M Y') }}</small></td>
+                            <td>{{ $flight->stops ?: 'Nonstop' }}</td>
+                            <td><span class="admin-flight-status" data-status="{{ $flight->status }}">{{ ucfirst($flight->status) }}</span></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="7" class="admin-flight-empty">No flights found.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    {{ $flights->links('pagination::bootstrap-5') }}
+        {{ $flights->links('super-admin.pagination') }}
+    </div>
 @endsection

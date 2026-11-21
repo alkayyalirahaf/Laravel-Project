@@ -50,5 +50,5 @@
         </table>
     </div>
 
-    {{ $payments->links('pagination::bootstrap-5') }}
+    {{ $payments->links('super-admin.pagination') }}
 @endsection

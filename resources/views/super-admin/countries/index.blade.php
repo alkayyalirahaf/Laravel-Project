@@ -34,5 +34,5 @@
             </tbody>
         </table>
     </div>
-    {{ $countries->links() }}
+    {{ $countries->links('super-admin.pagination') }}
 @endsection
